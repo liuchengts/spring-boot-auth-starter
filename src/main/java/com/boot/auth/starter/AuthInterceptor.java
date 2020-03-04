@@ -73,8 +73,9 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
             noAuthGetSession = handlerMethod.getMethod().getDeclaringClass().getAnnotation(NoAuthGetSession.class);
         }
         //不强制校验权限通过
-        if (noAuthGetSession != null && noAuthGetSession.loginRequired()) {
-            session.ifPresent(s -> request.setAttribute(AuthConstant.ATTR_SESSION, s));
+        if (noAuthGetSession != null) {
+            if (noAuthGetSession.loginRequired())
+                session.ifPresent(s -> request.setAttribute(AuthConstant.ATTR_SESSION, s));
             return true;
         }
         String json = loginRequired;

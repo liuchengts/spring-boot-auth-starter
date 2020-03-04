@@ -9,6 +9,9 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD, ElementType.TYPE})
 public @interface IgnoreLogin {
+    /**
+     * 是否忽略当前 IgnoreLogin注解
+     */
     boolean ignore() default true;
 }
 
