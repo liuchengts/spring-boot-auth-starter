@@ -44,4 +44,11 @@ public interface AuthService {
      * @return token内容
      */
     Map<String, String> analysisToken(String token);
+
+    /**
+     * 删除当前请求者的auth
+     *
+     * @param request 当前请求的 HttpServletRequest
+     */
+    void deleteAuth(HttpServletRequest request);
 }

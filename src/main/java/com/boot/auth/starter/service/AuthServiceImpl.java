@@ -79,6 +79,11 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    public void deleteAuth(HttpServletRequest request) {
+        delToken(analysisToken(request));
+    }
+
+    @Override
     public Boolean checkToken(HttpServletRequest request) {
         Map<String, String> tokenMap = analysisToken(request);
         if (tokenMap.isEmpty() || !tokenMap.containsKey(AuthConstant.MAP_KEY_KEY)) return false;
