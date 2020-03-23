@@ -48,9 +48,9 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
         Map<String, String> tokenMap = authService.analysisToken(request);
         Optional<Session> session = sessionResolver.resolve(tokenMap);
         HandlerMethod handlerMethod = (HandlerMethod) handler;
-        Auth auth = handlerMethod.getMethodAnnotation(Auth.class);
+        Auth auth = handlerMethod.getMethod().getDeclaringClass().getAnnotation(Auth.class);
         if (auth == null) {
-            auth = handlerMethod.getMethod().getDeclaringClass().getAnnotation(Auth.class);
+            auth = handlerMethod.getMethodAnnotation(Auth.class);
         }
         //没有auth直接认证通过
         if (auth == null) {
@@ -58,9 +58,9 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
             return true;
         }
         // 不校验登录信息
-        IgnoreLogin ignoreToken = handlerMethod.getMethodAnnotation(IgnoreLogin.class);
+        IgnoreLogin ignoreToken = handlerMethod.getMethod().getDeclaringClass().getAnnotation(IgnoreLogin.class);
         if (ignoreToken == null) {
-            ignoreToken = handlerMethod.getMethod().getDeclaringClass().getAnnotation(IgnoreLogin.class);
+            ignoreToken = handlerMethod.getMethodAnnotation(IgnoreLogin.class);
         }
         //不校验登录信息通过
         if (null != ignoreToken && ignoreToken.ignore()) {
@@ -68,9 +68,9 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
             return true;
         }
         //不强制校验权限
-        NoAuthGetSession noAuthGetSession = handlerMethod.getMethodAnnotation(NoAuthGetSession.class);
+        NoAuthGetSession noAuthGetSession = handlerMethod.getMethod().getDeclaringClass().getAnnotation(NoAuthGetSession.class);
         if (noAuthGetSession == null) {
-            noAuthGetSession = handlerMethod.getMethod().getDeclaringClass().getAnnotation(NoAuthGetSession.class);
+            noAuthGetSession = handlerMethod.getMethodAnnotation(NoAuthGetSession.class);
         }
         //不强制校验权限通过
         if (noAuthGetSession != null) {
