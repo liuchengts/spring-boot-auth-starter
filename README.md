@@ -10,14 +10,61 @@
       redis:
         host: 127.0.0.1
         port: 6379
-        password: 123456
     ```
-  
+* 如果想启用 ``` @OperLog ``` 自定义增加一个声明即可，例如以下方式:
+```
+//todo 在这里自己定义日志类型
+public interface OperLogConstant {
+
+    /**
+     * 业务1
+     **/
+    String SERVICE1 = "service1";
+    /**
+     * 业务2
+     **/
+    String SERVICE2 = "service2";
+}
+
+```
+* 如果不想使用默认的日志记录方式，可以按以下方式增加自定义处理:
+```
+@Primary
+@Service
+public class LogServiceImpl extends DefaultLogServiceImpl {
+    @Override
+    public void addLog(OperLogAnnotationEntity logEntity) {
+        log.debug("add  log :{}", logEntity);
+        //todo 在这里自己定义访问日志处理的方式
+    }
+}
+```
+
+ * 如果不想使用默认权限拦截后的消息输出，可以按以下方式增加自定义处理:
+ ```
+ @Primary
+ @Service
+ public class OutJsonServiceImpl extends DefaultOutJsonServiceImpl {
+     @Autowired
+     ObjectMapper objectMapper;
+ 
+     @Override
+     public String errorOutJson(String msg, String code) {
+         //todo 在这里自己定义被权限拦截后的数据返回格式
+         try {
+             return objectMapper.writeValueAsString("error");
+         } catch (Exception e) {
+             throw new AuthException(e);
+         }
+     }
+ }
+ ```
 ### 使用说明
 * 说明：主要针对需要登录或需要访问权限的资源使用
 * @Auth 权限注解（默认权限在 ```com.boot.auth.starter.common.DefaultRolesConstant```）
 * @NoAuthGetSession 不强制校验权限(默认不强制校验）
 * @IgnoreLogin 允许不登录(默认允许不登录）
+* @OperLog 日志记录
 * 在控制器方法中声明 ```Session session``` 会自动注入
 
 ### 使用示例
@@ -49,7 +96,35 @@
         return session;
     }
 ```
+4、```@OperLog``` 日志记录，额外字段使用 ```com.boot.auth.starter.bo.RequestHeaderBO``` 中的属性写到请求的 ```header``` 中
+* 用法1(推荐)：
+```
+    @OperLog(operType = OperLogConstant.SERVICE2)
+    @Auth(roles = RolesConstant.USER_1)
+    @GetMapping("/2")
+    public Object service2(Session session) {
+        log.info("访问到了 service2:{}", session);
+        return session;
+    }
 
+```
+* 用法2：
+```
+   @OperLog(operType = OperLogConstant.SERVICE1)
+       @GetMapping("/1")
+       public Object service1(@RequestHeader(value = AuthConstant.HEADER_KEY_PLATFORM) String platform,
+                              @RequestHeader(value = AuthConstant.HEADER_KEY_CHANNEL) String channel,
+                              @RequestHeader(value = AuthConstant.HEADER_KEY_VERSION) String version,
+                              @RequestHeader(value = AuthConstant.HEADER_KEY_DEVICEID) String deviceId) {
+           Map<String, String> map = new HashMap<>();
+           map.put(AuthConstant.HEADER_KEY_PLATFORM, platform);
+           map.put(AuthConstant.HEADER_KEY_CHANNEL, channel);
+           map.put(AuthConstant.HEADER_KEY_VERSION, version);
+           map.put(AuthConstant.HEADER_KEY_DEVICEID, deviceId);
+           log.info("访问到了 service1:{}", map);
+           return map;
+       }
+```
 #### 权限注解的使用
 * 三个注解可以叠加使用，优先级(由高到低)为 @IgnoreLogin @NoAuthGetSession @Auth
 * 三个注解都可以对类或方法级别生效
