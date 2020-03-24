@@ -97,7 +97,7 @@ public class LogServiceImpl extends DefaultLogServiceImpl {
     }
 ```
 4、```@OperLog``` 日志记录，额外字段使用 ```com.boot.auth.starter.bo.RequestHeaderBO``` 中的属性写到请求的 ```header``` 中
-* 用法1(推荐)：
+* 用法：
 ```
     @OperLog(operType = OperLogConstant.SERVICE2)
     @Auth(roles = RolesConstant.USER_1)
@@ -107,23 +107,6 @@ public class LogServiceImpl extends DefaultLogServiceImpl {
         return session;
     }
 
-```
-* 用法2：
-```
-   @OperLog(operType = OperLogConstant.SERVICE1)
-       @GetMapping("/1")
-       public Object service1(@RequestHeader(value = AuthConstant.HEADER_KEY_PLATFORM) String platform,
-                              @RequestHeader(value = AuthConstant.HEADER_KEY_CHANNEL) String channel,
-                              @RequestHeader(value = AuthConstant.HEADER_KEY_VERSION) String version,
-                              @RequestHeader(value = AuthConstant.HEADER_KEY_DEVICEID) String deviceId) {
-           Map<String, String> map = new HashMap<>();
-           map.put(AuthConstant.HEADER_KEY_PLATFORM, platform);
-           map.put(AuthConstant.HEADER_KEY_CHANNEL, channel);
-           map.put(AuthConstant.HEADER_KEY_VERSION, version);
-           map.put(AuthConstant.HEADER_KEY_DEVICEID, deviceId);
-           log.info("访问到了 service1:{}", map);
-           return map;
-       }
 ```
 #### 权限注解的使用
 * 三个注解可以叠加使用，优先级(由高到低)为 @IgnoreLogin @NoAuthGetSession @Auth
