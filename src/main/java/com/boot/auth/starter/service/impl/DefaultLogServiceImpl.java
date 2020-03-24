@@ -11,6 +11,6 @@ public class DefaultLogServiceImpl implements LogService {
 
     @Override
     public void addLog(OperLogAnnotationEntity logEntity) {
-        log.info("add  log :{}", logEntity);
+        log.debug("add log :{}", logEntity);
     }
 }
