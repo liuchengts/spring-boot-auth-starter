@@ -14,35 +14,35 @@ public interface AuthConstant {
      */
     String ATTR_SESSION = "ATTR_SESSION";
     /**
-     * 用户昵称
+     * session-用户昵称
      */
     String SESSION_NICK_NAME = "nickName";
     /**
-     * 微信 openId
+     * session-微信 openId
      */
     String SESSION_OPEN_ID = "openId";
     /**
-     * 微信 unionId
+     * session-微信 unionId
      */
     String SESSION_UNION_ID = "unionId";
     /**
-     * 用户编号
+     * session-用户编号
      */
     String SESSION_USER_NO = "userNo";
     /**
-     * 头像
+     * session-头像
      */
     String SESSION_AVATAR = "avatar";
     /**
-     * 权限
+     * session-权限
      */
     String SESSION_ROLES = "roles";
     /**
-     * 手机号
+     * session-手机号
      */
     String SESSION_MOBILE = "mobile";
     /**
-     * 自定义 Object类
+     * session-自定义 Object类
      */
     String SESSION_OBJECT = "obj";
 
@@ -66,6 +66,25 @@ public interface AuthConstant {
      * token解析 key- key
      */
     String MAP_KEY_KEY = "key";
+
+    /**
+     * header-平台 key
+     */
+    String HEADER_KEY_PLATFORM = "platform";
+    /**
+     * header-渠道 key
+     */
+    String HEADER_KEY_CHANNEL = "channel";
+    /**
+     * header-版本 key
+     */
+    String HEADER_KEY_VERSION = "version";
+    /**
+     * header-版本 key
+     */
+    String HEADER_KEY_DEVICEID = "deviceId";
+
+
 }
 
 

@@ -1,9 +1,10 @@
-package com.boot.auth.starter.service;
+package com.boot.auth.starter.service.impl;
 
 import com.boot.auth.starter.common.AuthConstant;
 import com.boot.auth.starter.common.AuthProperties;
 import com.boot.auth.starter.common.RestStatus;
 import com.boot.auth.starter.exception.AuthException;
+import com.boot.auth.starter.service.AuthService;
 import com.boot.auth.starter.utils.AESUtil;
 import com.boot.auth.starter.utils.CookieUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,6 +34,8 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public String auth(String group, String userNo, String roles, Map<String, Object> parameters, HttpServletResponse response, HttpServletRequest request) throws Exception {
         Map<String, String> oldTokenMap = analysisToken(request);
+        //删除原有的token
+        delToken(oldTokenMap);
         String key = userNo + AuthConstant.HEAD_TOKEN_SEPARATOR + group;
         //生成token
         String token = AESUtil.encrypt(key + AuthConstant.HEAD_TOKEN_SEPARATOR + System.currentTimeMillis(), authProperties.getDomain());
@@ -42,8 +45,6 @@ public class AuthServiceImpl implements AuthService {
         redisTemplate.opsForValue().set(authProperties.getTokenPrefix() + key, objectMapper.writeValueAsString(parameters), authProperties.getOverdueTime(), TimeUnit.DAYS);
         CookieUtils.setCookie(request, response, TOKEN_NAME, token);
         response.setHeader(TOKEN_NAME, token);
-        //删除原有的token
-        delToken(oldTokenMap);
         return token;
     }
 

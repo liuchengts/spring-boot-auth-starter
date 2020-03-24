@@ -3,9 +3,13 @@ package com.boot.auth.starter;
 import com.boot.auth.starter.annotation.Auth;
 import com.boot.auth.starter.annotation.IgnoreLogin;
 import com.boot.auth.starter.annotation.NoAuthGetSession;
+import com.boot.auth.starter.annotation.OperLog;
 import com.boot.auth.starter.common.AuthConstant;
 import com.boot.auth.starter.common.Session;
+import com.boot.auth.starter.model.OperLogAnnotationEntity;
 import com.boot.auth.starter.service.AuthService;
+import com.boot.auth.starter.service.LogService;
+import com.boot.auth.starter.utils.IPUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.lang.Nullable;
@@ -18,7 +22,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class AuthInterceptor extends HandlerInterceptorAdapter {
@@ -27,17 +30,20 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
     private final String tokenInvalid;
     private final String authNoInvalid;
     private final AuthService authService;
+    private final LogService logService;
 
     public AuthInterceptor(SessionResolver sessionResolver,
                            String loginRequired,
                            String tokenInvalid,
                            String authNoInvalid,
-                           AuthService authService) {
+                           AuthService authService,
+                           LogService logService) {
         this.sessionResolver = sessionResolver;
         this.loginRequired = loginRequired;
         this.tokenInvalid = tokenInvalid;
         this.authNoInvalid = authNoInvalid;
         this.authService = authService;
+        this.logService = logService;
     }
 
     @Override
@@ -46,7 +52,7 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
             return true;
         }
         Map<String, String> tokenMap = authService.analysisToken(request);
-        Optional<Session> session = sessionResolver.resolve(tokenMap);
+        Optional<Session> session = sessionResolver.resolve(tokenMap, request.getHeader(AuthConstant.HEADER_KEY_PLATFORM));
         HandlerMethod handlerMethod = (HandlerMethod) handler;
         Auth auth = handlerMethod.getMethod().getDeclaringClass().getAnnotation(Auth.class);
         if (auth == null) {
@@ -94,8 +100,7 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
         }
         //开始校验权限
         List<String> roles = Arrays.asList(session.get().getRoles().split(","));
-        List<String> requireds = Arrays.asList(auth.roles());
-        Optional<String> optionalRole = requireds.stream().filter(roles::equals).findFirst();
+        Optional<String> optionalRole = Arrays.stream(auth.roles()).filter(roles::contains).findFirst();
         if (!optionalRole.isPresent()) {
             json = authNoInvalid;
             send(response, json);
@@ -114,34 +119,40 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
      * @throws Exception
      */
     private void send(HttpServletResponse response, String json) throws Exception {
-        response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.getWriter().write(json);
         response.getWriter().close();
     }
 
     /**
      * 记录用户操作日志
-     *
-     * @param request
-     * @param response
-     * @param handler
      */
     private void saveOperLog(HttpServletRequest request, HttpServletResponse response, Object handler) {
         Map<String, String> tokenMap = authService.analysisToken(request);
-        Optional<Session> session = sessionResolver.resolve(tokenMap);
-
-//        if (handler instanceof HandlerMethod) {
-//            HandlerMethod handlerMethod = (HandlerMethod) handler;
-//            OperLogAnnotation operLogAnnotation = handlerMethod.getMethodAnnotation(OperLogAnnotation.class);
-//            if (operLogAnnotation != null && operLogAnnotation.flag()) {
-//                String operType = operLogAnnotation.operType();
-//                String platform = request.getHeader("platform");
-//                String channel = request.getHeader("channel");
-//                String versionName = request.getHeader("version");
-//                String deviceid = request.getHeader("deviceid");
-//                String ip = IPUtil.getClientIP(request);
-//            }
-//        }
+        Optional<Session> optionalSession = sessionResolver.resolve(tokenMap, request.getHeader(AuthConstant.HEADER_KEY_PLATFORM));
+        if (handler instanceof HandlerMethod) {
+            HandlerMethod handlerMethod = (HandlerMethod) handler;
+            OperLog operLog = handlerMethod.getMethod().getDeclaringClass().getAnnotation(OperLog.class);
+            if (operLog == null) {
+                operLog = handlerMethod.getMethodAnnotation(OperLog.class);
+            }
+            if (operLog != null && operLog.flag()) {
+                OperLogAnnotationEntity logEntity = new OperLogAnnotationEntity();
+                logEntity.setOperType(operLog.operType());
+                logEntity.setChannel(request.getHeader(AuthConstant.HEADER_KEY_CHANNEL));
+                logEntity.setVersion(request.getHeader(AuthConstant.HEADER_KEY_VERSION));
+                logEntity.setDeviceId(request.getHeader(AuthConstant.HEADER_KEY_DEVICEID));
+                logEntity.setIp(IPUtils.getClientIP(request));
+                if (optionalSession.isPresent()) {//当前访问者信息
+                    Session session = optionalSession.get();
+                    logEntity.setUserNo(session.getUserNo());
+                    logEntity.setUsername(session.getUsername());
+                    logEntity.setRoles(session.getRoles());
+                    logEntity.setObj(session.getObj());
+                }
+                logService.addLog(logEntity);
+            }
+        }
     }
 
     @Override

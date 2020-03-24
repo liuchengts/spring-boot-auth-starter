@@ -23,7 +23,7 @@ public class SessionResolver {
         this.tokenPrefix = tokenPrefix;
     }
 
-    Optional<Session> resolve(Map<String, String> tokenMap) {
+    Optional<Session> resolve(Map<String, String> tokenMap, String platform) {
         if (tokenMap.isEmpty() || !tokenMap.containsKey(AuthConstant.MAP_KEY_KEY)) {
             return Optional.empty();
         }
@@ -49,6 +49,7 @@ public class SessionResolver {
                     .avatar(avatar)
                     .roles(roles)
                     .mobile(mobile)
+                    .platform(platform)
                     .obj(obj)
                     .build();
             return Optional.of(session);

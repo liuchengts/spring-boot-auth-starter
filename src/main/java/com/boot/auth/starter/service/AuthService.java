@@ -51,4 +51,5 @@ public interface AuthService {
      * @param request 当前请求的 HttpServletRequest
      */
     void deleteAuth(HttpServletRequest request);
+
 }

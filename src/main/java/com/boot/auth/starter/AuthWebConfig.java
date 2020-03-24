@@ -3,11 +3,11 @@ package com.boot.auth.starter;
 import com.boot.auth.starter.common.AuthProperties;
 import com.boot.auth.starter.common.RestStatus;
 import com.boot.auth.starter.service.AuthService;
-import com.boot.auth.starter.vo.AResponse;
+import com.boot.auth.starter.service.LogService;
+import com.boot.auth.starter.service.OutJsonService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
@@ -15,6 +15,7 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
+
 @Configuration
 public class AuthWebConfig implements WebMvcConfigurer {
 
@@ -26,6 +27,10 @@ public class AuthWebConfig implements WebMvcConfigurer {
     AuthProperties authProperties;
     @Autowired
     AuthService authService;
+    @Autowired
+    LogService logService;
+    @Autowired
+    OutJsonService outJsonService;
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
@@ -40,7 +45,7 @@ public class AuthWebConfig implements WebMvcConfigurer {
 
     @Bean
     public AuthInterceptor authInterceptor() {
-        return new AuthInterceptor(sessionResolver(), loginRequired(), tokenInvalid(), authNoInvalid(), authService);
+        return new AuthInterceptor(sessionResolver(), loginRequired(), tokenInvalid(), authNoInvalid(), authService, logService);
     }
 
     @Bean
@@ -50,34 +55,16 @@ public class AuthWebConfig implements WebMvcConfigurer {
 
     @Bean
     String loginRequired() {
-        AResponse aResponse = new AResponse(RestStatus.USER_NOLOGIIN);
-        aResponse.setSuccessFalse();
-        try {
-            return objectMapper.writeValueAsString(aResponse);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return outJsonService.errorOutJson(RestStatus.USER_NOLOGIIN.getMsg(), String.valueOf(RestStatus.USER_NOLOGIIN.value()));
     }
 
     @Bean
     String tokenInvalid() {
-        AResponse aResponse = new AResponse(RestStatus.USER_TOKEN_INVALID);
-        aResponse.setSuccessFalse();
-        try {
-            return objectMapper.writeValueAsString(aResponse);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return outJsonService.errorOutJson(RestStatus.USER_TOKEN_INVALID.getMsg(), String.valueOf(RestStatus.USER_TOKEN_INVALID.value()));
     }
 
     @Bean
     String authNoInvalid() {
-        AResponse aResponse = new AResponse(RestStatus.AUTH_NO);
-        aResponse.setSuccessFalse();
-        try {
-            return objectMapper.writeValueAsString(aResponse);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return outJsonService.errorOutJson(RestStatus.AUTH_NO.getMsg(), String.valueOf(RestStatus.AUTH_NO.value()));
     }
 }

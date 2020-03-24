@@ -16,7 +16,7 @@ import java.security.SecureRandom;
 import java.security.Security;
 import java.util.Map;
 
-public class AESUtil {
+public final class AESUtil {
     private final static org.slf4j.Logger log = LoggerFactory.getLogger(AESUtil.class);
     //加密方式
     private static final String ALGORITHM = "AES";
