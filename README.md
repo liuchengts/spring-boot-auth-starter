@@ -27,7 +27,7 @@ public interface OperLogConstant {
 }
 
 ```
-* 如果不想使用默认的日志记录方式，可以按以下方式增加自定义处理:
+* (非必须)如果不想使用默认的日志记录方式，可以按以下方式增加自定义处理:
 ```
 @Primary
 @Service
@@ -40,7 +40,7 @@ public class LogServiceImpl extends DefaultLogServiceImpl {
 }
 ```
 
- * 如果不想使用默认权限拦截后的消息输出，可以按以下方式增加自定义处理:
+ * (非必须)如果不想使用默认权限拦截后的消息输出，可以按以下方式增加自定义处理:
  ```
  @Primary
  @Service
