@@ -7,6 +7,10 @@ import java.io.Serializable;
 @Data
 public class OperLogAnnotationEntity implements Serializable {
     /**
+     * 时间戳
+     */
+    Long time = System.currentTimeMillis();
+    /**
      * 记录类型
      */
     String operType;
