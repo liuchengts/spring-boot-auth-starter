@@ -16,20 +16,21 @@ public final class CookieUtils {
     /**
      * 得到Cookie的值, 不编码
      *
-     * @param request
-     * @param cookieName
-     * @return
+     * @param request    HttpServletRequest
+     * @param cookieName cookieName
+     * @return Cookie的值
      */
     public static String getCookieValue(HttpServletRequest request, String cookieName) {
         return getCookieValue(request, cookieName, false);
     }
 
     /**
-     * 得到Cookie的值,
+     * 得到Cookie的值
      *
-     * @param request
-     * @param cookieName
-     * @return
+     * @param request    HttpServletRequest
+     * @param cookieName cookieName
+     * @param isDecoder  是否utf8编码，true是
+     * @return Cookie的值
      */
     public static String getCookieValue(HttpServletRequest request, String cookieName, boolean isDecoder) {
         Cookie[] cookieList = request.getCookies();
@@ -55,11 +56,12 @@ public final class CookieUtils {
     }
 
     /**
-     * 得到Cookie的值,
+     * 得到Cookie的值
      *
-     * @param request
-     * @param cookieName
-     * @return
+     * @param request      HttpServletRequest
+     * @param cookieName   cookieName
+     * @param encodeString 编码
+     * @return Cookie的值
      */
     public static String getCookieValue(HttpServletRequest request, String cookieName, String encodeString) {
         Cookie[] cookieList = request.getCookies();
@@ -82,6 +84,11 @@ public final class CookieUtils {
 
     /**
      * 设置Cookie的值 不设置生效时间默认浏览器关闭即失效,也不编码
+     *
+     * @param request     HttpServletRequest
+     * @param response    HttpServletResponse
+     * @param cookieName  cookieName
+     * @param cookieValue cookieValue
      */
     public static void setCookie(HttpServletRequest request, HttpServletResponse response, String cookieName,
                                  String cookieValue) {
@@ -90,6 +97,12 @@ public final class CookieUtils {
 
     /**
      * 设置Cookie的值 在指定时间内生效,但不编码
+     *
+     * @param request      HttpServletRequest
+     * @param response     HttpServletResponse
+     * @param cookieName   cookieName
+     * @param cookieValue  cookieValue
+     * @param cookieMaxage cookie生效的最大秒数
      */
     public static void setCookie(HttpServletRequest request, HttpServletResponse response, String cookieName,
                                  String cookieValue, int cookieMaxage) {
@@ -98,6 +111,12 @@ public final class CookieUtils {
 
     /**
      * 设置Cookie的值 不设置生效时间,但编码
+     *
+     * @param request     HttpServletRequest
+     * @param response    HttpServletResponse
+     * @param cookieName  cookieName
+     * @param cookieValue cookieValue
+     * @param isEncode    是否utf8编码
      */
     public static void setCookie(HttpServletRequest request, HttpServletResponse response, String cookieName,
                                  String cookieValue, boolean isEncode) {
@@ -106,6 +125,13 @@ public final class CookieUtils {
 
     /**
      * 设置Cookie的值 在指定时间内生效, 编码参数
+     *
+     * @param request      HttpServletRequest
+     * @param response     HttpServletResponse
+     * @param cookieName   cookieName
+     * @param cookieValue  cookieValue
+     * @param cookieMaxage cookie生效的最大秒数
+     * @param isEncode     是否utf8编码
      */
     public static void setCookie(HttpServletRequest request, HttpServletResponse response, String cookieName,
                                  String cookieValue, int cookieMaxage, boolean isEncode) {
@@ -114,6 +140,13 @@ public final class CookieUtils {
 
     /**
      * 设置Cookie的值 在指定时间内生效, 编码参数(指定编码)
+     *
+     * @param request      HttpServletRequest
+     * @param response     HttpServletResponse
+     * @param cookieName   cookieName
+     * @param cookieValue  cookieValue
+     * @param cookieMaxage cookie生效的最大秒数
+     * @param encodeString 编码
      */
     public static void setCookie(HttpServletRequest request, HttpServletResponse response, String cookieName,
                                  String cookieValue, int cookieMaxage, String encodeString) {
@@ -122,6 +155,10 @@ public final class CookieUtils {
 
     /**
      * 删除Cookie带cookie域名
+     *
+     * @param request    HttpServletRequest
+     * @param response   HttpServletResponse
+     * @param cookieName cookieName
      */
     public static void deleteCookie(HttpServletRequest request, HttpServletResponse response,
                                     String cookieName) {
@@ -131,7 +168,12 @@ public final class CookieUtils {
     /**
      * 设置Cookie的值，并使其在指定时间内生效
      *
+     * @param request      HttpServletRequest
+     * @param response     HttpServletResponse
+     * @param cookieName   cookieName
+     * @param cookieValue  cookieValue
      * @param cookieMaxage cookie生效的最大秒数
+     * @param isEncode     是否编码
      */
     private static final void doSetCookie(HttpServletRequest request, HttpServletResponse response,
                                           String cookieName, String cookieValue, int cookieMaxage, boolean isEncode) {
@@ -160,7 +202,12 @@ public final class CookieUtils {
     /**
      * 设置Cookie的值，并使其在指定时间内生效
      *
+     * @param request      HttpServletRequest
+     * @param response     HttpServletResponse
+     * @param cookieName   cookieName
+     * @param cookieValue  cookieValue
      * @param cookieMaxage cookie生效的最大秒数
+     * @param encodeString 编码
      */
     private static final void doSetCookie(HttpServletRequest request, HttpServletResponse response,
                                           String cookieName, String cookieValue, int cookieMaxage, String encodeString) {
@@ -189,6 +236,9 @@ public final class CookieUtils {
 
     /**
      * 得到cookie的域名
+     *
+     * @param request HttpServletRequest
+     * @return 域名
      */
     private static final String getDomainName(HttpServletRequest request) {
         String domainName = null;

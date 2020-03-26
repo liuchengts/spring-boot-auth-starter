@@ -69,10 +69,9 @@ public final class AESUtil {
     /**
      * AES加密
      *
-     * @return
-     * @throws
-     * @author wangli
-     * @since 2019/3/19 3:48 PM
+     * @param content 要加密的内容
+     * @param aesKey  秘钥
+     * @return 加密的结果
      */
     public static String encrypt(String content, String aesKey) {
         try {
@@ -96,11 +95,11 @@ public final class AESUtil {
     }
 
     /**
-     * @param content 待解密内容
-     * @return
-     * @Description: AES解密
-     * @author wang
-     * @date 2017-7-30 下午04:05:32
+     * 解密
+     *
+     * @param content 要解密的内容
+     * @param aesKey  秘钥
+     * @return 解密后的内容
      */
     public static String decrypt(String content, String aesKey) {
         try {
@@ -126,7 +125,8 @@ public final class AESUtil {
     /**
      * 生成加密秘钥
      *
-     * @return
+     * @param aesKey 秘钥
+     * @return 生成的秘钥
      */
     private static SecretKeySpec getSecretKey(final String aesKey) {
         //返回生成指定算法密钥生成器的 KeyGenerator 对象

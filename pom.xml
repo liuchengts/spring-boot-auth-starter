@@ -2,11 +2,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    <!-- Sonatype 官方的一个通用配置 oss-parent 无需更改 -->
     <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.2.4.RELEASE</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>7</version>
+        <relativePath/>
     </parent>
     <groupId>com.github.liuchengts</groupId>
     <artifactId>spring-boot-auth-starter</artifactId>
@@ -19,7 +20,57 @@
         <java.version>1.8</java.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <spring-boot.version>2.2.4.RELEASE</spring-boot.version>
     </properties>
+    <!-- 许可证 -->
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <!-- 项目分发信息，在执行 mvn deploy 后表示要发布的位置。有了这些信息就可以把网站部署到远程服务器或者把构件部署到远程仓库。-->
+    <distributionManagement>
+        <snapshotRepository>
+            <!-- 这个 id 与第一步 setting.xml 中设置的对应 -->
+            <id>sonatype-nexus-snapshots</id>
+            <name>OSS Snapshots Repository</name>
+            <!-- 这里的 url 就是 Issue 中回复的 snapshots 的 repository 地址-->
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+        </snapshotRepository>
+        <repository>
+            <!-- 这个 id 与第一步 setting.xml 中设置的对应 -->
+            <id>sonatype-nexus-staging</id>
+            <name>OSS Staging Repository</name>
+            <!-- 这里的 url 就是 Issue 中回复的 staging 的 repository 地址-->
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+    <!-- 问题管理 -->
+    <issueManagement>
+        <system>github</system>
+        <url>https://github.com/liuchengts/spring-boot-auth-starter/issues</url>
+    </issueManagement>
+    <!-- SCM(Source Control Management)标签允许你配置你的代码库，供 Maven web 站点和其它插件使用。 -->
+    <scm>
+        <tag>master</tag>
+        <url>git@github.com:liuchengts/spring-boot-auth-starter.git</url>
+        <connection>scm:git:git@github.com:liuchengts/spring-boot-auth-starter.git</connection>
+        <developerConnection>scm:git:git@github.com:liuchengts/spring-boot-auth-starter.git</developerConnection>
+    </scm>
+    <!-- 项目开发者列表 -->
+    <developers>
+        <developer>
+            <name>liuchengts</name>
+            <email>790809568@qq.com</email>
+            <organization>liuchengts</organization>
+            <roles>
+                <role>Developer</role>
+            </roles>
+            <timezone>+8</timezone>
+        </developer>
+    </developers>
 
     <dependencies>
         <dependency>
@@ -57,4 +108,16 @@
             <version>3.8.1</version>
         </dependency>
     </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 </project>

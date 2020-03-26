@@ -14,6 +14,8 @@ import java.lang.annotation.*;
 public @interface Auth {
     /**
      * 需要的角色
+     *
+     * @return roles
      */
     String[] roles() default {DefaultRolesConstant.DEFAULT};
 }

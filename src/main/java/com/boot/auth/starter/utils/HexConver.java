@@ -12,7 +12,9 @@ public final class HexConver {
 
     /**
      * byte数组转换为二进制字符串,每个字节以","隔开
-     **/
+     * @param bytes 要转换为二进制的字节数组
+     * @return 返回转换后的字符串
+     */
     public static String conver2HexStr(byte[] bytes) {
         StringBuffer result = new StringBuffer();
         for (int i = 0; i < bytes.length; i++) {
@@ -23,7 +25,9 @@ public final class HexConver {
 
     /**
      * 二进制字符串转换为byte数组,每个字节以","隔开
-     **/
+     * @param hex2Str  hex2Str
+     * @return 二进制
+     */
     public static byte[] conver2HexToByte(String hex2Str) {
         String[] temp = hex2Str.split(",");
         byte[] b = new byte[temp.length];
@@ -36,7 +40,9 @@ public final class HexConver {
 
     /**
      * byte数组转换为十六进制的字符串
-     **/
+     * @param bytes  bytes
+     * @return 十六进制的字符串
+     */
     public static String conver16HexStr(byte[] bytes) {
         StringBuffer result = new StringBuffer();
         for (int i = 0; i < bytes.length; i++) {
@@ -53,7 +59,9 @@ public final class HexConver {
 
     /**
      * 十六进制的字符串转换为byte数组
-     **/
+     * @param hex16Str hex16Str
+     * @return byte数组
+     */
     public static byte[] conver16HexToByte(String hex16Str) {
         char[] c = hex16Str.toCharArray();
         byte[] b = new byte[c.length / 2];

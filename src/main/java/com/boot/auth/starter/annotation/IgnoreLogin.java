@@ -11,6 +11,7 @@ import java.lang.annotation.*;
 public @interface IgnoreLogin {
     /**
      * 是否忽略当前 IgnoreLogin注解
+     * @return ignore
      */
     boolean ignore() default true;
 }

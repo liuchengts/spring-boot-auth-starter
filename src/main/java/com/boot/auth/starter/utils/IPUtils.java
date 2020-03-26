@@ -8,8 +8,8 @@ import javax.servlet.http.HttpServletRequest;
 public final class IPUtils {
     /**
      * 获取ip地址,防止集群、代理
-     *
-     * @return
+     * @param request HttpServletRequest
+     * @return ip
      */
     public static String getClientIP(HttpServletRequest request) {
         String ip = request.getHeader("x-forwarded-for");
