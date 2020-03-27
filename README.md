@@ -2,6 +2,14 @@
 基于springbootweb的权限拦截验证
 
 ### 使用前需要的准备
+* maven中央仓库地址 [其他方式集成](https://search.maven.org/artifact/com.github.liuchengts/spring-boot-auth-starter)
+```
+<dependency>
+    <groupId>com.github.liuchengts</groupId>
+    <artifactId>spring-boot-auth-starter</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
 * 声明一个接口来抽象具体的权限，可以继承 ```com.boot.auth.starter.common.DefaultRolesConstant``` 
 * 配置 ```com.boot.auth.starter.common.AuthProperties``` 中的必要属性
 * 正常配置 redis
