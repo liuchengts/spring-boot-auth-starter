@@ -1,6 +1,5 @@
 package com.boot.auth.starter.utils;
 
-import org.apache.commons.codec.Charsets;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
@@ -20,6 +19,7 @@ public final class AESUtil {
     private final static org.slf4j.Logger log = LoggerFactory.getLogger(AESUtil.class);
     //加密方式
     private static final String ALGORITHM = "AES";
+    private static final String CHARSET_NAME = "UTF-8";
 
     static {
         Security.setProperty("crypto.policy", "unlimited");
@@ -81,7 +81,7 @@ public final class AESUtil {
             }
             // 创建密码器
             Cipher cipher = Cipher.getInstance(ALGORITHM);
-            byte[] byteContent = content.getBytes(Charsets.UTF_8);
+            byte[] byteContent = content.getBytes(CHARSET_NAME);
             // 初始化
             cipher.init(Cipher.ENCRYPT_MODE, getSecretKey(aesKey));
             //执行加密
@@ -115,7 +115,7 @@ public final class AESUtil {
             cipher.init(Cipher.DECRYPT_MODE, getSecretKey(aesKey));
             //执行解密
             byte[] result = cipher.doFinal(contentByte);
-            return new String(result, Charsets.UTF_8);
+            return new String(result, CHARSET_NAME);
         } catch (Exception e) {
             log.error("AES解密数据异常：[content:{}; aesKey:{}]", content, aesKey);
         }

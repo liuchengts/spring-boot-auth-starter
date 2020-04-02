@@ -8,11 +8,11 @@ import com.boot.auth.starter.service.AuthService;
 import com.boot.auth.starter.utils.AESUtil;
 import com.boot.auth.starter.utils.CookieUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -20,9 +20,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-@Slf4j
 @Component
 public class AuthServiceImpl implements AuthService {
+    private final static org.slf4j.Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
     @Autowired
     StringRedisTemplate redisTemplate;
     @Autowired

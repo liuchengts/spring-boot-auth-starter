@@ -1,14 +1,8 @@
 package com.boot.auth.starter.common;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Component
 @ConfigurationProperties(prefix = "info.auth")
 public class AuthProperties {
@@ -24,4 +18,28 @@ public class AuthProperties {
      * 域名
      */
     public String domain;
+
+    public String getTokenPrefix() {
+        return tokenPrefix;
+    }
+
+    public void setTokenPrefix(String tokenPrefix) {
+        this.tokenPrefix = tokenPrefix;
+    }
+
+    public Long getOverdueTime() {
+        return overdueTime;
+    }
+
+    public void setOverdueTime(Long overdueTime) {
+        this.overdueTime = overdueTime;
+    }
+
+    public String getDomain() {
+        return domain;
+    }
+
+    public void setDomain(String domain) {
+        this.domain = domain;
+    }
 }

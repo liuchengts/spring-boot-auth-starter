@@ -1,6 +1,7 @@
 package com.boot.auth.starter;
 
 import com.boot.auth.starter.common.AuthConstant;
+import com.boot.auth.starter.common.LogicSession;
 import com.boot.auth.starter.common.RestStatus;
 import com.boot.auth.starter.common.Session;
 import com.boot.auth.starter.exception.AuthException;
@@ -23,14 +24,11 @@ public class SessionResolver {
         this.tokenPrefix = tokenPrefix;
     }
 
-    Optional<Session> resolve(Map<String, String> tokenMap, String platform) {
-        if (tokenMap.isEmpty() || !tokenMap.containsKey(AuthConstant.MAP_KEY_KEY)) {
-            return Optional.empty();
-        }
+    LogicSession resolve(Map<String, String> tokenMap, String platform, String version, String ip) {
+        LogicSession logicSession = new LogicSession();
+        if (tokenMap.isEmpty() || !tokenMap.containsKey(AuthConstant.MAP_KEY_KEY)) return logicSession;
         String user = redisTemplate.opsForValue().get(tokenPrefix + tokenMap.get(AuthConstant.MAP_KEY_KEY));
-        if (user == null || user.trim().isEmpty()) {
-            return Optional.empty();
-        }
+        if (user == null || user.trim().isEmpty()) return logicSession;
         try {
             JsonNode node = objectMapper.readTree(user);
             String nickName = node.path(AuthConstant.SESSION_NICK_NAME).asText();
@@ -41,18 +39,22 @@ public class SessionResolver {
             String roles = node.path(AuthConstant.SESSION_ROLES).asText();
             String mobile = node.path(AuthConstant.SESSION_MOBILE).asText();
             String obj = node.path(AuthConstant.SESSION_OBJECT).asText();
-            Session session = Session.builder()
-                    .username(nickName)
-                    .unionId(unionId)
-                    .openId(openId)
-                    .userNo(userNo)
-                    .avatar(avatar)
-                    .roles(roles)
-                    .mobile(mobile)
-                    .platform(platform)
-                    .obj(obj)
-                    .build();
-            return Optional.of(session);
+            Session session = new Session();
+            session.setUsername(nickName);
+            session.setUnionId(unionId);
+            session.setOpenId(openId);
+            session.setUserNo(userNo);
+            session.setAvatar(avatar);
+            session.setRoles(roles);
+            session.setMobile(mobile);
+            session.setPlatform(platform);
+            session.setVersion(version);
+            session.setObj(obj);
+            session.setIp(ip);
+            logicSession.setValidLogin(true);
+            logicSession.setValidToken(true);
+            logicSession.setSessionOptional(Optional.of(session));
+            return logicSession;
         } catch (IOException e) {
             throw new AuthException(RestStatus.SYSTEM_ERROR);
         }
