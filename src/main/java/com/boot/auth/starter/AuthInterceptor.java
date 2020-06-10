@@ -112,7 +112,7 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
      * @throws Exception
      */
     private void send(HttpServletResponse response, String json) throws Exception {
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
         response.getWriter().write(json);
         response.getWriter().close();
     }
