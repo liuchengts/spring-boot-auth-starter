@@ -123,5 +123,5 @@ public class LogServiceImpl extends DefaultLogServiceImpl {
 
 ## 版本发布说明
 * 1.0.0 基本的权限拦截等功能
-* 1.0.1 增加自定义日志、拦截输出等功能
+* 1.0.1 增加自定义日志、拦截输出等功能；去掉非必须依赖的 lombok 插件(便于适应kotlin的 kpt插件编译)
 * 1.0.2 修改输出json的编码为 utf-8
