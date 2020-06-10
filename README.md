@@ -7,7 +7,7 @@
 <dependency>
     <groupId>com.github.liuchengts</groupId>
     <artifactId>spring-boot-auth-starter</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
 </dependency>
 ```
 * 声明一个接口来抽象具体的权限，可以继承 ```com.boot.auth.starter.common.DefaultRolesConstant``` 
@@ -120,3 +120,8 @@ public class LogServiceImpl extends DefaultLogServiceImpl {
 * 四个注解可以叠加使用，优先级(由高到低)为 @IgnoreLogin @NoAuthGetSession @Auth
 * 四个注解都可以对类或方法级别生效，在方法使用注解优先级最高
 * 使用示例 [spring-boot-auth-starter-example](https://github.com/liuchengts/spring-boot-auth-starter-example) 参见 com.boot.auth.example.controllers 下的部分示例
+
+## 版本发布说明
+* 1.0.0 基本的权限拦截等功能
+* 1.0.1 增加自定义日志、拦截输出等功能
+* 1.0.2 修改输出json的编码为 utf-8
