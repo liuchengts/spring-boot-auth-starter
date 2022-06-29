@@ -1,11 +1,14 @@
 package com.boot.auth.starter.utils;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -13,57 +16,21 @@ import java.lang.reflect.Modifier;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.Security;
+import java.util.Base64;
 import java.util.Map;
 
 public final class AESUtil {
     private final static org.slf4j.Logger log = LoggerFactory.getLogger(AESUtil.class);
     //加密方式
-    private static final String ALGORITHM = "AES";
+    private static final String ALGORITHM = "AES/CBC/PKCS7Padding";
     private static final String CHARSET_NAME = "UTF-8";
+    private static final String PROVIDER = "BC";
 
     static {
-        Security.setProperty("crypto.policy", "unlimited");
-        fixKeyLength();
-    }
-
-    /**
-     * 解决aes加密的秘钥长度限制
-     */
-    private static void fixKeyLength() {
-        String errorString = "Failed manually overriding key-length permissions.";
-        int newMaxKeyLength;
-        try {
-            if ((newMaxKeyLength = Cipher.getMaxAllowedKeyLength("AES")) < 256) {
-                Class c = Class.forName("javax.crypto.CryptoAllPermissionCollection");
-                Constructor con = c.getDeclaredConstructor();
-                con.setAccessible(true);
-                Object allPermissionCollection = con.newInstance();
-                Field f = c.getDeclaredField("all_allowed");
-                f.setAccessible(true);
-                f.setBoolean(allPermissionCollection, true);
-
-                c = Class.forName("javax.crypto.CryptoPermissions");
-                con = c.getDeclaredConstructor();
-                con.setAccessible(true);
-                Object allPermissions = con.newInstance();
-                f = c.getDeclaredField("perms");
-                f.setAccessible(true);
-                ((Map) f.get(allPermissions)).put("*", allPermissionCollection);
-                c = Class.forName("javax.crypto.JceSecurityManager");
-                f = c.getDeclaredField("defaultPolicy");
-                f.setAccessible(true);
-                Field mf = Field.class.getDeclaredField("modifiers");
-                mf.setAccessible(true);
-                mf.setInt(f, f.getModifiers() & ~Modifier.FINAL);
-                f.set(null, allPermissions);
-
-                newMaxKeyLength = Cipher.getMaxAllowedKeyLength("AES");
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(errorString, e);
+        if (Security.getProvider(PROVIDER) != null) {
+            Security.removeProvider(PROVIDER);
         }
-        if (newMaxKeyLength < 256)
-            throw new RuntimeException(errorString); // hack failed
+        Security.addProvider(new BouncyCastleProvider());
     }
 
     /**
@@ -76,20 +43,20 @@ public final class AESUtil {
     public static String encrypt(String content, String aesKey) {
         try {
             if (StringUtils.isEmpty(content) || StringUtils.isEmpty(aesKey)) {
-                log.error("加密数据异常,内容或私钥为空[content:{};aesKey:{}]", content, aesKey);
+                log.error("加密数据异常,内容或私钥为空");
                 return null;
             }
             // 创建密码器
-            Cipher cipher = Cipher.getInstance(ALGORITHM);
+            Cipher cipher = Cipher.getInstance(ALGORITHM, PROVIDER);
             byte[] byteContent = content.getBytes(CHARSET_NAME);
             // 初始化
-            cipher.init(Cipher.ENCRYPT_MODE, getSecretKey(aesKey));
+            cipher.init(Cipher.ENCRYPT_MODE, getSecretKey(aesKey), new IvParameterSpec(new byte[16]));
             //执行加密
             byte[] encryptResult = cipher.doFinal(byteContent);
             //用16进制加密
-            return HexConver.conver16HexStr(encryptResult);
+            return Base64.getEncoder().encodeToString(encryptResult);
         } catch (Exception e) {
-            log.error("AES加密数据异常：[content:{};aesKey:{}]", content, aesKey, e);
+            log.error("AES加密数据异常:", e);
         }
         return null;
     }
@@ -104,20 +71,20 @@ public final class AESUtil {
     public static String decrypt(String content, String aesKey) {
         try {
             if (StringUtils.isEmpty(content) || StringUtils.isEmpty(aesKey)) {
-                log.error("解密数据异常,内容或私钥为空[content:{};aesKey:{}]", content, aesKey);
+                log.error("解密数据异常,内容或私钥为空");
                 return null;
             }
             //先将16进制字符串转为byte数组
-            byte[] contentByte = HexConver.conver16HexToByte(content);
+            byte[] contentByte = Base64.getDecoder().decode(content);
             // 创建密码器
-            Cipher cipher = Cipher.getInstance(ALGORITHM);
+            Cipher cipher = Cipher.getInstance(ALGORITHM, PROVIDER);
             // 初始化
-            cipher.init(Cipher.DECRYPT_MODE, getSecretKey(aesKey));
+            cipher.init(Cipher.DECRYPT_MODE, getSecretKey(aesKey), new IvParameterSpec(new byte[16]));
             //执行解密
             byte[] result = cipher.doFinal(contentByte);
             return new String(result, CHARSET_NAME);
         } catch (Exception e) {
-            log.error("AES解密数据异常：[content:{}; aesKey:{}]", content, aesKey);
+            log.error("AES解密数据异常:", e);
         }
         return null;
     }
@@ -129,18 +96,26 @@ public final class AESUtil {
      * @return 生成的秘钥
      */
     private static SecretKeySpec getSecretKey(final String aesKey) {
-        //返回生成指定算法密钥生成器的 KeyGenerator 对象
-        KeyGenerator keyGenerator = null;
+        String algorithm = "AES";
         try {
-            keyGenerator = KeyGenerator.getInstance(ALGORITHM);
             SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
+            Security.addProvider(new BouncyCastleProvider());
             random.setSeed(aesKey.getBytes());
-            keyGenerator.init(256, random);
-            SecretKey secretKey = keyGenerator.generateKey();
-            return new SecretKeySpec(secretKey.getEncoded(), "AES");
-        } catch (NoSuchAlgorithmException ex) {
-            log.error("获取加密秘钥异常：[aesKey:{}]", aesKey);
+            KeyGenerator keyGenerator = KeyGenerator.getInstance(algorithm);
+            keyGenerator.init(random);
+            return new SecretKeySpec(keyGenerator.generateKey().getEncoded(), algorithm);
+        } catch (NoSuchAlgorithmException e) {
+            log.error("获取加密秘钥异常:", e);
         }
         return null;
+    }
+
+    public static void main(String[] args) {
+//        https://blog.csdn.net/lijun169/article/details/82736103
+        String key = "5136796459362114404125733499221448628095239751552846523902990090962942534711629841712950696905779806829274259986483908672792734832841063147657867601278627311474100165615103855530193273455059262869349253056194325470283668038035277913173792476812675321979645750336495052247466307863580839005507172381362475843403948840409679155632872355458180714760020125993942474575408148517376426288596699726831507775676374708476380063728284050626413901646030365565589724221161815007619898031669458614807443014766631288867994994547897784619661872271984961847442186766561593096259846120275460470262031071412870342688967302960753339314966637943486897434364961489077348586221110507726548995076867946594695808694672363807347965465494783266151580001876070825158315745198480509464248829588389087409325279003056394502659181281479882347988178006424504905184752639743092152080732317799173228609517606936237362620305908057124236035672015215954249915929";
+        String a = encrypt("你好", key);
+        System.out.println(a);
+        String b = decrypt(a, key);
+        System.out.println(b);
     }
 }
