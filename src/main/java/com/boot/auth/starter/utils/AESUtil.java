@@ -131,6 +131,5 @@ public final class AESUtil {
 //        System.out.println(a); // 64gNOrLP/cLvVj+fnncRiw==
 //        String b = decrypt(a, key);
 //        System.out.println(b);
-////        System.out.println(decrypt("VTJGc2RHVmtYMTlyOFBlN24vR0ZZeHlZQURsZjhlZ0drUHRHaVJTeUdoWT0=", key));
 //    }
 }

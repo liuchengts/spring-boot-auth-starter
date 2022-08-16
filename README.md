@@ -7,7 +7,14 @@
 <dependency>
     <groupId>com.github.liuchengts</groupId>
     <artifactId>spring-boot-auth-starter</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
+</dependency>
+
+<!--哈希算法实现（高位aes加密需要）-->
+<dependency>
+    <groupId>org.bouncycastle</groupId>
+    <artifactId>bcprov-jdk15on</artifactId>
+    <version>1.70</version>
 </dependency>
 ```
 * 声明一个接口来抽象具体的权限，可以继承 ```com.boot.auth.starter.common.DefaultRolesConstant``` 

@@ -19,6 +19,7 @@ import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -52,13 +53,12 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
             return true;
         }
         LogicSession logicSession = getSession(request);
-        Optional<Session> sessionOptional = logicSession.getSessionOptional();
         HandlerMethod handlerMethod = (HandlerMethod) handler;
         Auth auth = handlerMethod.getMethod().getDeclaringClass().getAnnotation(Auth.class);
         if (auth == null) auth = handlerMethod.getMethodAnnotation(Auth.class);
         //没有auth直接认证通过
         if (auth == null) {
-            sessionOptional.ifPresent(s -> request.setAttribute(AuthConstant.ATTR_SESSION, s));
+            requestAttribute(request, logicSession);
             return true;
         }
         // 不校验登录信息
@@ -68,7 +68,7 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
         }
         //不校验登录信息通过
         if (null != ignoreToken && ignoreToken.ignore()) {
-            sessionOptional.ifPresent(s -> request.setAttribute(AuthConstant.ATTR_SESSION, s));
+            requestAttribute(request, logicSession);
             return true;
         }
         //不强制校验权限
@@ -76,11 +76,12 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
         if (noAuthGetSession == null) noAuthGetSession = handlerMethod.getMethodAnnotation(NoAuthGetSession.class);
         //不强制校验权限通过
         if (noAuthGetSession != null) {
-            if (noAuthGetSession.loginRequired())
-                sessionOptional.ifPresent(s -> request.setAttribute(AuthConstant.ATTR_SESSION, s));
+            if (noAuthGetSession.loginRequired()) {
+                requestAttribute(request, logicSession);
+            }
             return true;
         }
-        if (!logicSession.getValidLogin()) {
+        if (logicSession == null || !logicSession.getValidLogin()) {
             //未登录
             send(response, loginRequired);
             log.warn("用户未登录,拒绝访问[" + request.getRequestURI() + "]");
@@ -93,15 +94,23 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
             return false;
         }
         //开始校验权限
-        List<String> roles = Arrays.asList(sessionOptional.get().getRoles().split(","));
+        List<String> roles = logicSession.getSessionOptional()
+                .map(session -> Arrays.asList(session.getRoles().split(",")))
+                .orElse(new ArrayList<>());
         Optional<String> optionalRole = Arrays.stream(auth.roles()).filter(roles::contains).findFirst();
         if (!optionalRole.isPresent()) {
             send(response, authNoInvalid);
             log.warn("用户不具备访问权限,拒绝访问[" + request.getRequestURI() + "]");
             return false;
         }
-        sessionOptional.ifPresent(s -> request.setAttribute(AuthConstant.ATTR_SESSION, s));
+        requestAttribute(request, logicSession);
         return true;
+    }
+
+    private void requestAttribute(HttpServletRequest request, LogicSession logicSession) {
+        if (logicSession == null) return;
+        Optional<Session> sessionOptional = logicSession.getSessionOptional();
+        sessionOptional.ifPresent(s -> request.setAttribute(AuthConstant.ATTR_SESSION, s));
     }
 
     /**
@@ -124,14 +133,18 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
      * @return 返回逻辑session对象
      */
     private LogicSession getSession(HttpServletRequest request) {
-        return sessionResolver.resolve(authService.analysisToken(request), getHeaderValue(request, AuthConstant.HEADER_KEY_PLATFORM),
-                getHeaderValue(request, AuthConstant.HEADER_KEY_VERSION), IPUtils.getClientIP(request));
+        try {
+            return sessionResolver.resolve(authService.analysisToken(request), getHeaderValue(request, AuthConstant.HEADER_KEY_PLATFORM),
+                    getHeaderValue(request, AuthConstant.HEADER_KEY_VERSION), IPUtils.getClientIP(request));
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /**
      * 记录用户操作日志
      */
-    private void saveOperLog(HttpServletRequest request, HttpServletResponse response, Object handler) {
+    private void saveOperLog(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         if (handler instanceof HandlerMethod) {
             HandlerMethod handlerMethod = (HandlerMethod) handler;
             OperLog operLog = handlerMethod.getMethod().getDeclaringClass().getAnnotation(OperLog.class);

@@ -54,39 +54,45 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public Map<String, String> analysisToken(HttpServletRequest request) {
+    public Map<String, String> analysisToken(HttpServletRequest request) throws Exception {
         String token = request.getHeader(TOKEN_NAME);
         if (StringUtils.isEmpty(token)) token = CookieUtils.getCookieValue(request, TOKEN_NAME);
         return analysisToken(token);
     }
 
     @Override
-    public Map<String, String> analysisToken(String token) {
+    public Map<String, String> analysisToken(String token) throws Exception {
         Map<String, String> map = new HashMap<>();
         if (StringUtils.isEmpty(token)) return map;
-        try {
-            String decryptToken = AESUtil.decrypt(token, authProperties.getDomain());
-            assert decryptToken != null;
-            String[] keys = decryptToken.split(AuthConstant.HEAD_TOKEN_SEPARATOR);
-            map.put(AuthConstant.MAP_KEY_TOKEN, token);
-            map.put(AuthConstant.MAP_KEY_USER_NO, keys[0]);
-            map.put(AuthConstant.MAP_KEY_GROUP, keys[1]);
-            map.put(AuthConstant.MAP_KEY_TIME, keys[2]);
-            map.put(AuthConstant.MAP_KEY_KEY, keys[0] + AuthConstant.HEAD_TOKEN_SEPARATOR + keys[1]);
-        } catch (Exception e) {
-            log.error("解密token失败", e);
-        }
+        String decryptToken = AESUtil.decrypt(token, authProperties.getDomain());
+        assert decryptToken != null;
+        String[] keys = decryptToken.split(AuthConstant.HEAD_TOKEN_SEPARATOR);
+        map.put(AuthConstant.MAP_KEY_TOKEN, token);
+        map.put(AuthConstant.MAP_KEY_USER_NO, keys[0]);
+        map.put(AuthConstant.MAP_KEY_GROUP, keys[1]);
+        map.put(AuthConstant.MAP_KEY_TIME, keys[2]);
+        map.put(AuthConstant.MAP_KEY_KEY, keys[0] + AuthConstant.HEAD_TOKEN_SEPARATOR + keys[1]);
         return map;
     }
 
     @Override
     public void deleteAuth(HttpServletRequest request) {
-        delToken(analysisToken(request));
+        try {
+            delToken(analysisToken(request));
+        } catch (Exception e) {
+            log.error("deleteAuth", e);
+        }
+
     }
 
     @Override
     public Boolean checkToken(HttpServletRequest request) {
-        Map<String, String> tokenMap = analysisToken(request);
+        Map<String, String> tokenMap;
+        try {
+            tokenMap = analysisToken(request);
+        } catch (Exception e) {
+            return false;
+        }
         if (tokenMap.isEmpty() || !tokenMap.containsKey(AuthConstant.MAP_KEY_KEY)) return false;
         try {
             Long expire = redisTemplate.getExpire(authProperties.getTokenPrefix() + tokenMap.get(AuthConstant.MAP_KEY_KEY), TimeUnit.SECONDS);
