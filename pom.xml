@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.github.liuchengts</groupId>
     <artifactId>spring-boot-auth-starter</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <packaging>jar</packaging>
     <name>spring-boot-auth-starter</name>
     <description>基于springboot的权限验证</description>
