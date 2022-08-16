@@ -132,8 +132,6 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
      * 记录用户操作日志
      */
     private void saveOperLog(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        LogicSession logicSession = getSession(request);
-        Optional<Session> sessionOptional = logicSession.getSessionOptional();
         if (handler instanceof HandlerMethod) {
             HandlerMethod handlerMethod = (HandlerMethod) handler;
             OperLog operLog = handlerMethod.getMethod().getDeclaringClass().getAnnotation(OperLog.class);
@@ -143,6 +141,8 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
                 logEntity.setOperType(operLog.operType());
                 logEntity.setChannel(getHeaderValue(request, AuthConstant.HEADER_KEY_CHANNEL));
                 logEntity.setDeviceId(getHeaderValue(request, AuthConstant.HEADER_KEY_DEVICEID));
+                LogicSession logicSession = getSession(request);
+                Optional<Session> sessionOptional = logicSession.getSessionOptional();
                 if (sessionOptional.isPresent()) {//当前访问者信息
                     Session session = sessionOptional.get();
                     logEntity.setUserNo(session.getUserNo());
