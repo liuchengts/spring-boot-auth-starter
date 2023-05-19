@@ -5,12 +5,12 @@ import com.boot.auth.starter.common.AuthProperties;
 import com.boot.auth.starter.common.RestStatus;
 import com.boot.auth.starter.exception.AuthException;
 import com.boot.auth.starter.service.AuthService;
+import com.boot.auth.starter.CacheSupport;
 import com.boot.auth.starter.utils.AESUtil;
 import com.boot.auth.starter.utils.CookieUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -18,13 +18,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 @Component
 public class AuthServiceImpl implements AuthService {
     private final static org.slf4j.Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
     @Autowired
-    StringRedisTemplate redisTemplate;
+    CacheSupport cacheSupport;
     @Autowired
     ObjectMapper objectMapper;
     @Autowired
@@ -42,15 +41,15 @@ public class AuthServiceImpl implements AuthService {
         if (parameters == null) parameters = new HashMap<>();
         parameters.put(AuthConstant.SESSION_USER_NO, userNo);
         parameters.put(AuthConstant.SESSION_ROLES, roles);
-        redisTemplate.opsForValue().set(authProperties.getTokenPrefix() + key, objectMapper.writeValueAsString(parameters), authProperties.getOverdueTime(), TimeUnit.DAYS);
-        CookieUtils.setCookie(request, response, TOKEN_NAME, token, authProperties.getOverdueTime().intValue() * 3600);
+        cacheSupport.put(authProperties.getTokenPrefix() + key, objectMapper.writeValueAsString(parameters), authProperties.getOverdueTime());
+        CookieUtils.setCookie(request, response, TOKEN_NAME, token, authProperties.getOverdueTime().intValue());
         response.setHeader(TOKEN_NAME, token);
         return token;
     }
 
     private void delToken(Map<String, String> oldTokenMap) {
         if (oldTokenMap.isEmpty() || !oldTokenMap.containsKey(AuthConstant.MAP_KEY_KEY)) return;
-        redisTemplate.delete(authProperties.getTokenPrefix() + oldTokenMap.get(AuthConstant.MAP_KEY_KEY));
+        cacheSupport.remove(authProperties.getTokenPrefix() + oldTokenMap.get(AuthConstant.MAP_KEY_KEY));
     }
 
     @Override
@@ -95,7 +94,7 @@ public class AuthServiceImpl implements AuthService {
         }
         if (tokenMap.isEmpty() || !tokenMap.containsKey(AuthConstant.MAP_KEY_KEY)) return false;
         try {
-            Long expire = redisTemplate.getExpire(authProperties.getTokenPrefix() + tokenMap.get(AuthConstant.MAP_KEY_KEY), TimeUnit.SECONDS);
+            Long expire = cacheSupport.getExpire(authProperties.getTokenPrefix() + tokenMap.get(AuthConstant.MAP_KEY_KEY));
             if (expire <= 0) return false;
         } catch (Exception e) {
             throw new AuthException(RestStatus.SYSTEM_ERROR);

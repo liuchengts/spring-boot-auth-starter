@@ -11,7 +11,7 @@ public class AuthProperties {
      */
     public String tokenPrefix;
     /**
-     * 授权过期时间，单位（天）
+     * 授权过期时间，单位（秒）
      */
     public Long overdueTime;
     /**

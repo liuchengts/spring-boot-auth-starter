@@ -6,10 +6,8 @@ import com.boot.auth.starter.service.AuthService;
 import com.boot.auth.starter.service.LogService;
 import com.boot.auth.starter.service.OutJsonService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -19,18 +17,27 @@ import java.util.List;
 @Configuration
 public class AuthWebConfig implements WebMvcConfigurer {
 
-    @Autowired
-    StringRedisTemplate redisTemplate;
-    @Autowired
+    final
+    CacheSupport cacheSupport;
+    final
     ObjectMapper objectMapper;
-    @Autowired
+    final
     AuthProperties authProperties;
-    @Autowired
+    final
     AuthService authService;
-    @Autowired
+    final
     LogService logService;
-    @Autowired
+    final
     OutJsonService outJsonService;
+
+    public AuthWebConfig(CacheSupport cacheSupport, ObjectMapper objectMapper, AuthProperties authProperties, AuthService authService, LogService logService, OutJsonService outJsonService) {
+        this.cacheSupport = cacheSupport;
+        this.objectMapper = objectMapper;
+        this.authProperties = authProperties;
+        this.authService = authService;
+        this.logService = logService;
+        this.outJsonService = outJsonService;
+    }
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
@@ -50,7 +57,7 @@ public class AuthWebConfig implements WebMvcConfigurer {
 
     @Bean
     SessionResolver sessionResolver() {
-        return new SessionResolver(redisTemplate, objectMapper, authProperties.getTokenPrefix());
+        return new SessionResolver(cacheSupport, objectMapper, authProperties.getTokenPrefix());
     }
 
     @Bean
