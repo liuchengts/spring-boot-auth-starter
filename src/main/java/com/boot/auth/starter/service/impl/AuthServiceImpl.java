@@ -43,7 +43,7 @@ public class AuthServiceImpl implements AuthService {
         parameters.put(AuthConstant.SESSION_USER_NO, userNo);
         parameters.put(AuthConstant.SESSION_ROLES, roles);
         redisTemplate.opsForValue().set(authProperties.getTokenPrefix() + key, objectMapper.writeValueAsString(parameters), authProperties.getOverdueTime(), TimeUnit.DAYS);
-        CookieUtils.setCookie(request, response, TOKEN_NAME, token);
+        CookieUtils.setCookie(request, response, TOKEN_NAME, token, authProperties.getOverdueTime().intValue() * 3600);
         response.setHeader(TOKEN_NAME, token);
         return token;
     }
