@@ -3,6 +3,7 @@ package com.boot.auth.starter;
 import com.boot.auth.starter.common.AuthProperties;
 import com.boot.auth.starter.common.RestStatus;
 import com.boot.auth.starter.service.AuthService;
+import com.boot.auth.starter.service.CacheService;
 import com.boot.auth.starter.service.LogService;
 import com.boot.auth.starter.service.OutJsonService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,7 +19,7 @@ import java.util.List;
 public class AuthWebConfig implements WebMvcConfigurer {
 
     final
-    CacheSupport cacheSupport;
+    CacheService cacheService;
     final
     ObjectMapper objectMapper;
     final
@@ -30,8 +31,8 @@ public class AuthWebConfig implements WebMvcConfigurer {
     final
     OutJsonService outJsonService;
 
-    public AuthWebConfig(CacheSupport cacheSupport, ObjectMapper objectMapper, AuthProperties authProperties, AuthService authService, LogService logService, OutJsonService outJsonService) {
-        this.cacheSupport = cacheSupport;
+    public AuthWebConfig(CacheService cacheService, ObjectMapper objectMapper, AuthProperties authProperties, AuthService authService, LogService logService, OutJsonService outJsonService) {
+        this.cacheService = cacheService;
         this.objectMapper = objectMapper;
         this.authProperties = authProperties;
         this.authService = authService;
@@ -57,7 +58,7 @@ public class AuthWebConfig implements WebMvcConfigurer {
 
     @Bean
     SessionResolver sessionResolver() {
-        return new SessionResolver(cacheSupport, objectMapper, authProperties.getTokenPrefix());
+        return new SessionResolver(cacheService, objectMapper, authProperties.getTokenPrefix());
     }
 
     @Bean
