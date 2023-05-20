@@ -1,6 +1,7 @@
 # spring-boot-auth-starter
 基于springbootweb的权限拦截验证
-
+### 重要声明
+自`1.0.6`开始不再提供令牌存储的功能，需要继承`CacheSupport`自行实现其中的所有方法
 ### 使用前需要的准备
 * maven中央仓库地址 [其他方式集成](https://search.maven.org/artifact/com.github.liuchengts/spring-boot-auth-starter)
 ```
