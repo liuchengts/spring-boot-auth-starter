@@ -1,13 +1,14 @@
 # spring-boot-auth-starter
 基于springbootweb的权限拦截验证
-
+### 重要声明
+本分支作为零代码集成最终版，已发布的`1.0.5`版本作为最终版，此分支即日起停止维护，最新的活跃分支为`custom`
 ### 使用前需要的准备
 * maven中央仓库地址 [其他方式集成](https://search.maven.org/artifact/com.github.liuchengts/spring-boot-auth-starter)
 ```
 <dependency>
     <groupId>com.github.liuchengts</groupId>
     <artifactId>spring-boot-auth-starter</artifactId>
-    <version>1.0.4</version>
+    <version>1.0.5</version>
 </dependency>
 
 <!--哈希算法实现（高位aes加密需要）-->
