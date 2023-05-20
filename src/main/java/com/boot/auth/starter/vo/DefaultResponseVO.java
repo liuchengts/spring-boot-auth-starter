@@ -3,8 +3,6 @@ package com.boot.auth.starter.vo;
 import com.boot.auth.starter.common.RestStatus;
 
 import java.io.Serializable;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 public class DefaultResponseVO implements Serializable {
     private String code;

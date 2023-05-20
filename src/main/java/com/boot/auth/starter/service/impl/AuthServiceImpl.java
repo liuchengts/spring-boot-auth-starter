@@ -5,7 +5,7 @@ import com.boot.auth.starter.common.AuthProperties;
 import com.boot.auth.starter.common.RestStatus;
 import com.boot.auth.starter.exception.AuthException;
 import com.boot.auth.starter.service.AuthService;
-import com.boot.auth.starter.CacheSupport;
+import com.boot.auth.starter.service.CacheService;
 import com.boot.auth.starter.utils.AESUtil;
 import com.boot.auth.starter.utils.CookieUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,7 +23,7 @@ import java.util.Map;
 public class AuthServiceImpl implements AuthService {
     private final static org.slf4j.Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
     @Autowired
-    CacheSupport cacheSupport;
+    CacheService cacheService;
     @Autowired
     ObjectMapper objectMapper;
     @Autowired
@@ -41,7 +41,7 @@ public class AuthServiceImpl implements AuthService {
         if (parameters == null) parameters = new HashMap<>();
         parameters.put(AuthConstant.SESSION_USER_NO, userNo);
         parameters.put(AuthConstant.SESSION_ROLES, roles);
-        cacheSupport.put(authProperties.getTokenPrefix() + key, objectMapper.writeValueAsString(parameters), authProperties.getOverdueTime());
+        cacheService.put(authProperties.getTokenPrefix() + key, objectMapper.writeValueAsString(parameters), authProperties.getOverdueTime());
         CookieUtils.setCookie(request, response, TOKEN_NAME, token, authProperties.getOverdueTime().intValue());
         response.setHeader(TOKEN_NAME, token);
         return token;
@@ -49,7 +49,7 @@ public class AuthServiceImpl implements AuthService {
 
     private void delToken(Map<String, String> oldTokenMap) {
         if (oldTokenMap.isEmpty() || !oldTokenMap.containsKey(AuthConstant.MAP_KEY_KEY)) return;
-        cacheSupport.remove(authProperties.getTokenPrefix() + oldTokenMap.get(AuthConstant.MAP_KEY_KEY));
+        cacheService.remove(authProperties.getTokenPrefix() + oldTokenMap.get(AuthConstant.MAP_KEY_KEY));
     }
 
     @Override
@@ -94,7 +94,7 @@ public class AuthServiceImpl implements AuthService {
         }
         if (tokenMap.isEmpty() || !tokenMap.containsKey(AuthConstant.MAP_KEY_KEY)) return false;
         try {
-            Long expire = cacheSupport.getExpire(authProperties.getTokenPrefix() + tokenMap.get(AuthConstant.MAP_KEY_KEY));
+            Long expire = cacheService.getExpire(authProperties.getTokenPrefix() + tokenMap.get(AuthConstant.MAP_KEY_KEY));
             if (expire <= 0) return false;
         } catch (Exception e) {
             throw new AuthException(RestStatus.SYSTEM_ERROR);

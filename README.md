@@ -1,14 +1,14 @@
 # spring-boot-auth-starter
 基于springbootweb的权限拦截验证
 ### 重要声明
-本分支由`1.0.6`为第一个版本，此版本不再提供令牌存储的功能，需要继承`CacheSupport`自行实现其中的所有方法。如果只需要使用`redis`存储方案，请直接使用`1.0.5`版本（它的源代码位于`master`分支）
+本分支由`1.0.7`为第一个版本，此版本不再提供令牌存储的功能，需要继承`CacheSupport`自行实现其中的所有方法。如果只需要使用`redis`存储方案，请直接使用`1.0.5`版本（它的源代码位于`master`分支）
 ### 使用前需要的准备
 * maven中央仓库地址 [其他方式集成](https://search.maven.org/artifact/com.github.liuchengts/spring-boot-auth-starter)
 ```
 <dependency>
     <groupId>com.github.liuchengts</groupId>
     <artifactId>spring-boot-auth-starter</artifactId>
-    <version>1.0.6</version>
+    <version>1.0.7</version>
 </dependency>
 
 <!--哈希算法实现（高位aes加密需要）-->

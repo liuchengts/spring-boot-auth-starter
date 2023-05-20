@@ -1,12 +1,17 @@
-package com.boot.auth.starter;
-
-import org.springframework.stereotype.Component;
+package com.boot.auth.starter.service;
 
 /**
- * 缓存
+ * 缓存业务
  */
-@Component
-public abstract class CacheSupport {
+public interface CacheService {
+    /**
+     * 存储
+     *
+     * @param key  要存储的key
+     * @param data 存储的数据json
+     */
+    void put(String key, String data);
+
     /**
      * 存储
      *
@@ -14,9 +19,7 @@ public abstract class CacheSupport {
      * @param data        存储的数据json
      * @param overdueTime 过期时间，单位秒
      */
-    public void put(String key, String data, Long overdueTime) {
-
-    }
+    void put(String key, String data, Long overdueTime);
 
     /**
      * 获取
@@ -24,9 +27,7 @@ public abstract class CacheSupport {
      * @param key 要获取的key
      * @return 获取内容
      */
-    public String get(String key) {
-        return null;
-    }
+    String get(String key);
 
     /**
      * 查询过期时间
@@ -34,16 +35,12 @@ public abstract class CacheSupport {
      * @param key 要查询的key
      * @return 过期时间，单位秒
      */
-    public Long getExpire(String key) {
-        return 0L;
-    }
+    Long getExpire(String key);
 
     /**
      * 移除
      *
      * @param key 要移除的key
      */
-    public void remove(String key) {
-
-    }
+    void remove(String key);
 }
