@@ -20,13 +20,7 @@
 ```
 * 声明一个接口来抽象具体的权限，可以继承 ```com.boot.auth.starter.common.DefaultRolesConstant``` 
 * 配置 ```com.boot.auth.starter.common.AuthProperties``` 中的必要属性
-* 正常配置 redis
-    ```
-    spring:
-      redis:
-        host: 127.0.0.1
-        port: 6379
-    ```
+* 这里需要实现`com.boot.auth.starter.CacheSupport`中的所有方法来自定义存储方式
 * 如果想启用 ``` @OperLog ``` 自定义增加一个声明即可，例如以下方式:
 ```
 //todo 在这里自己定义日志类型
