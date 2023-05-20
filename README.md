@@ -8,7 +8,7 @@
 <dependency>
     <groupId>com.github.liuchengts</groupId>
     <artifactId>spring-boot-auth-starter</artifactId>
-    <version>1.0.4</version>
+    <version>1.0.6</version>
 </dependency>
 
 <!--哈希算法实现（高位aes加密需要）-->
