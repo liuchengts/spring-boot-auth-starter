@@ -51,6 +51,6 @@ public interface AuthService {
      * @param response   http response
      * @param request    http request
      */
-    void deleteAuth(HttpServletResponse response, HttpServletRequest request);
+    Boolean deleteAuth(HttpServletResponse response, HttpServletRequest request);
 
 }

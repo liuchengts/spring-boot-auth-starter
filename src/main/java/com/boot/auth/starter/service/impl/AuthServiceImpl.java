@@ -79,13 +79,14 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void deleteAuth(HttpServletResponse response, HttpServletRequest request) {
+    public Boolean deleteAuth(HttpServletResponse response, HttpServletRequest request) {
         try {
             delToken(analysisToken(request), response, request);
+            return true;
         } catch (Exception e) {
             log.error("deleteAuth", e);
+            return false;
         }
-
     }
 
     @Override
