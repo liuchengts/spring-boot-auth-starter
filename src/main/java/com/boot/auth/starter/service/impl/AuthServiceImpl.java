@@ -31,10 +31,11 @@ public class AuthServiceImpl implements AuthService {
     final static String TOKEN_NAME = AuthConstant.HEAD_TOKEN_NAME.toLowerCase();
 
     @Override
-    public String auth(String group, String userNo, String roles, Map<String, Object> parameters, HttpServletResponse response, HttpServletRequest request) throws Exception {
+    public String auth(String group, String userNo, String roles, Map<String, Object> parameters,
+                       HttpServletResponse response, HttpServletRequest request) throws Exception {
         Map<String, String> oldTokenMap = analysisToken(request);
         //删除原有的token
-        delToken(oldTokenMap);
+        delToken(oldTokenMap, response, request);
         String key = userNo + AuthConstant.HEAD_TOKEN_SEPARATOR + group;
         //生成token
         String token = AESUtil.encrypt(key + AuthConstant.HEAD_TOKEN_SEPARATOR + System.currentTimeMillis(), authProperties.getDomain());
@@ -47,9 +48,10 @@ public class AuthServiceImpl implements AuthService {
         return token;
     }
 
-    private void delToken(Map<String, String> oldTokenMap) {
+    private void delToken(Map<String, String> oldTokenMap, HttpServletResponse response, HttpServletRequest request) {
         if (oldTokenMap.isEmpty() || !oldTokenMap.containsKey(AuthConstant.MAP_KEY_KEY)) return;
         cacheService.remove(authProperties.getTokenPrefix() + oldTokenMap.get(AuthConstant.MAP_KEY_KEY));
+        CookieUtils.deleteCookie(request, response, TOKEN_NAME);
     }
 
     @Override
@@ -75,9 +77,9 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void deleteAuth(HttpServletRequest request) {
+    public void deleteAuth(HttpServletResponse response, HttpServletRequest request) {
         try {
-            delToken(analysisToken(request));
+            delToken(analysisToken(request), response, request);
         } catch (Exception e) {
             log.error("deleteAuth", e);
         }
