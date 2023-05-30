@@ -66,7 +66,9 @@ public class AuthServiceImpl implements AuthService {
         Map<String, String> map = new HashMap<>();
         if (StringUtils.isEmpty(token)) return map;
         String decryptToken = AESUtil.decrypt(token, authProperties.getDomain());
-        assert decryptToken != null;
+        if (!StringUtils.hasText(decryptToken)) {
+            throw new AuthException(RestStatus.USER_TOKEN_INVALID);
+        }
         String[] keys = decryptToken.split(AuthConstant.HEAD_TOKEN_SEPARATOR);
         map.put(AuthConstant.MAP_KEY_TOKEN, token);
         map.put(AuthConstant.MAP_KEY_USER_NO, keys[0]);
