@@ -17,6 +17,18 @@
 * 声明一个接口来抽象具体的权限，可以继承 `com.boot.auth.starter.common.DefaultRolesConstant`
 * 根据实际情况配置 `com.boot.auth.starter.common.AuthProperties` 中的属性
 
+```
+info:
+  auth:
+    tokenPrefix: test # 令牌存储前缀（必须）
+    overdueTime: 9999999999 # 令牌过期时间，单位秒（必须）
+    domain: localhost # 授权域名（必须）
+    exclude: true  # 账户令牌排他性，true 表示一个账号只会保留最后一次生成的令牌；false 表示一个账号可以对应多个令牌（非必须，默认 false）
+    cacheInitialCapacity: 100 # guava 缓存的初始大小（非必须，默认 由guava 自行设置）
+    cacheMaximumSize: 2000 # guava 设置缓存最大容量，超过之后就会按照LRU最近虽少使用算法来移除缓存项（非必须，默认 由guava 自行设置）
+    cacheStats: true # guava 缓存统计（非必须，默认 false）
+    loadingCache: false # guava 启用 loadingCache 作为缓存器（非必须，默认 false）
+```
 ## 二、使用示例
 
 `使用示例demo` [spring-boot-auth-starter-example](https://github.com/liuchengts/spring-boot-auth-starter-example) 
