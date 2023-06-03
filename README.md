@@ -15,7 +15,7 @@
 </dependency>
 ```
 * 声明一个接口来抽象具体的权限，可以继承 `com.boot.auth.starter.common.DefaultRolesConstant`
-* 根据实际情况配置 `com.boot.auth.starter.common.AuthProperties` 中的属性
+* 在项目的`application.yml`文件中，根据实际情况配置 `com.boot.auth.starter.common.AuthProperties` 值
 
 ```
 info:
