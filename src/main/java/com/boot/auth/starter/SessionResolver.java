@@ -5,21 +5,21 @@ import com.boot.auth.starter.common.LogicSession;
 import com.boot.auth.starter.common.RestStatus;
 import com.boot.auth.starter.common.Session;
 import com.boot.auth.starter.exception.AuthException;
+import com.boot.auth.starter.service.CacheService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 
 public class SessionResolver {
-    private final StringRedisTemplate redisTemplate;
+    private final CacheService cacheService;
     private final ObjectMapper objectMapper;
     private final String tokenPrefix;
 
-    public SessionResolver(StringRedisTemplate redisTemplate, ObjectMapper objectMapper, String tokenPrefix) {
-        this.redisTemplate = redisTemplate;
+    public SessionResolver(CacheService cacheService, ObjectMapper objectMapper, String tokenPrefix) {
+        this.cacheService = cacheService;
         this.objectMapper = objectMapper;
         this.tokenPrefix = tokenPrefix;
     }
@@ -27,7 +27,7 @@ public class SessionResolver {
     LogicSession resolve(Map<String, String> tokenMap, String platform, String version, String ip) {
         LogicSession logicSession = new LogicSession();
         if (tokenMap.isEmpty() || !tokenMap.containsKey(AuthConstant.MAP_KEY_KEY)) return logicSession;
-        String user = redisTemplate.opsForValue().get(tokenPrefix + tokenMap.get(AuthConstant.MAP_KEY_KEY));
+        String user = cacheService.get(tokenPrefix + tokenMap.get(AuthConstant.MAP_KEY_KEY));
         if (user == null || user.trim().isEmpty()) return logicSession;
         try {
             JsonNode node = objectMapper.readTree(user);

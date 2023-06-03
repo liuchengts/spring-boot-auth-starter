@@ -9,8 +9,12 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class DefaultOutJsonServiceImpl implements OutJsonService {
-    @Autowired
+    final
     ObjectMapper objectMapper;
+
+    public DefaultOutJsonServiceImpl(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     @Override
     public String errorOutJson(String msg, String code) {
