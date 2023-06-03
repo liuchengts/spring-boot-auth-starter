@@ -3,7 +3,7 @@
 ## 重要声明
 * 本分支由`1.0.7`为第一个版本，此版本默认提供`guava`存储令牌的功能
 * 根据`guava`的缓存特性，提供了`2`种缓存方案(`LoadingCache、Cache`)
-* 如果需要使用`redis`存储方案，参考 [四、自定义功能及开发](#四、自定义功能及开发) ；或请直接使用`1.0.5`版本（它的源代码位于`master`分支）
+* 如果需要使用`redis`存储方案，参考: [四、自定义功能及开发](#jump) ；或请直接使用`1.0.5`版本（它的源代码位于`master`分支）
 
 ## 一、使用前需要的准备
 * maven中央仓库地址 [其他方式集成](https://search.maven.org/artifact/com.github.liuchengts/spring-boot-auth-starter)
@@ -155,7 +155,7 @@ public class LogServiceImpl extends DefaultLogServiceImpl {
      }
  }
  ```
-## 四、自定义功能及开发
+## <span id="jump"> 四、自定义功能及开发 </span>
 - 自定义`guava`的缓存功能（使用`GuavaCacheSupport`类中对应的`set`方法）
   - 全局的`LoadingCache`的`CacheLoader`
   - 全局的缓存移除事件`RemovalListener`
@@ -164,4 +164,5 @@ public class LogServiceImpl extends DefaultLogServiceImpl {
 
 
 ## 五、版本发布说明
-* 1.0.7 
+* 1.0.6 去掉`redis`支持，改由`CacheService`类提供自定义缓存
+* 1.0.7 增加`guava`缓存实现；增加排他性的授权认证；支持自定义缓存存储方案；
