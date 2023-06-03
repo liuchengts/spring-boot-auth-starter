@@ -52,7 +52,7 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
         if (!(handler instanceof HandlerMethod)) {
             return true;
         }
-        LogicSession logicSession = getSession(request);
+        LogicSession logicSession = getSession(response, request);
         HandlerMethod handlerMethod = (HandlerMethod) handler;
         Auth auth = handlerMethod.getMethod().getDeclaringClass().getAnnotation(Auth.class);
         if (auth == null) auth = handlerMethod.getMethodAnnotation(Auth.class);
@@ -132,11 +132,12 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
      * @param request HttpServletRequest
      * @return 返回逻辑session对象
      */
-    private LogicSession getSession(HttpServletRequest request) {
+    private LogicSession getSession(HttpServletResponse response, HttpServletRequest request) {
         try {
             return sessionResolver.resolve(authService.analysisToken(request), getHeaderValue(request, AuthConstant.HEADER_KEY_PLATFORM),
                     getHeaderValue(request, AuthConstant.HEADER_KEY_VERSION), IPUtils.getClientIP(request));
         } catch (Exception e) {
+            authService.deleteAuth(response, request);
             return null;
         }
     }
@@ -154,7 +155,7 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
                 logEntity.setOperType(operLog.operType());
                 logEntity.setChannel(getHeaderValue(request, AuthConstant.HEADER_KEY_CHANNEL));
                 logEntity.setDeviceId(getHeaderValue(request, AuthConstant.HEADER_KEY_DEVICEID));
-                LogicSession logicSession = getSession(request);
+                LogicSession logicSession = getSession(response, request);
                 Optional<Session> sessionOptional = logicSession.getSessionOptional();
                 if (sessionOptional.isPresent()) {//当前访问者信息
                     Session session = sessionOptional.get();

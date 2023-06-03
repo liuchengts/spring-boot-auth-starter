@@ -118,9 +118,9 @@ public class LogServiceImpl extends DefaultLogServiceImpl {
     }
 
 ```
-#### 权限注解的使用
-* 四个注解可以叠加使用，优先级(由高到低)为 @IgnoreLogin @NoAuthGetSession @Auth
-* 四个注解都可以对类或方法级别生效，在方法使用注解优先级最高
+#### 权限注解的使用（`@OperLog`除外）
+* 三个注解可以叠加使用，优先级(由高到低)为 @IgnoreLogin @NoAuthGetSession @Auth
+* 三个注解都可以对类或方法级别生效，在方法使用注解优先级最高
 * 使用示例 [spring-boot-auth-starter-example](https://github.com/liuchengts/spring-boot-auth-starter-example) 参见 com.boot.auth.example.controllers 下的部分示例
 
 ## 版本发布说明

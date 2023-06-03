@@ -20,18 +20,14 @@ public class AuthWebConfig implements WebMvcConfigurer {
 
     final
     CacheService cacheService;
-    final
     ObjectMapper objectMapper;
-    final
     AuthProperties authProperties;
-    final
     AuthService authService;
-    final
     LogService logService;
-    final
     OutJsonService outJsonService;
 
-    public AuthWebConfig(CacheService cacheService, ObjectMapper objectMapper, AuthProperties authProperties, AuthService authService, LogService logService, OutJsonService outJsonService) {
+    public AuthWebConfig(CacheService cacheService, ObjectMapper objectMapper, AuthProperties authProperties,
+                         AuthService authService, LogService logService, OutJsonService outJsonService) {
         this.cacheService = cacheService;
         this.objectMapper = objectMapper;
         this.authProperties = authProperties;

@@ -1,38 +1,121 @@
 package com.boot.auth.starter.service.impl;
 
+import com.boot.auth.starter.common.AuthConstant;
+import com.boot.auth.starter.common.AuthProperties;
+import com.boot.auth.starter.common.RestStatus;
+import com.boot.auth.starter.exception.AuthException;
 import com.boot.auth.starter.service.CacheService;
+import com.boot.auth.starter.support.GuavaCacheSupport;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+
+/**
+ * 在使用本类时，需要注意以下问题:
+ * 1、若使用 Cache 而非 LoadingCache ，可以直接使用本类，无需任何改动
+ * 2、使用 LoadingCache 时，需要自行在 GuavaCacheSupport 中调用 setCacheLoader 后才能使用该类其他方法
+ * 3、GuavaCacheSupport 中的 setRemovalListener 是可选的
+ * 4、在 Guava 中没有直接实现 expire ，只是判断了是否存在，请自行实现
+ * 5、exclude 选项不是必须的
+ * 6、若本类中有任何方法不适用，请自行复写它。若先使用其他缓存，请直接复写全部方法
+ */
 @Component
 public class DefaultCacheServiceImpl implements CacheService {
     private final static org.slf4j.Logger log = LoggerFactory.getLogger(DefaultCacheServiceImpl.class);
-    private final static String ERROR = "默认未实现此方法,请自行实现";
+    final
+    GuavaCacheSupport guavaCacheSupport;
+    AuthProperties authProperties;
+
+    public DefaultCacheServiceImpl(GuavaCacheSupport guavaCacheSupport, AuthProperties authProperties) {
+        this.guavaCacheSupport = guavaCacheSupport;
+        this.authProperties = authProperties;
+    }
 
     @Override
     public void put(String key, String data) {
-        log.warn(ERROR);
+        guavaCacheSupport.getCache().put(key, data);
     }
 
     @Override
     public void put(String key, String data, Long overdueTime) {
-        log.warn(ERROR);
+        this.put(key, data);
     }
 
     @Override
     public String get(String key) {
-        log.warn(ERROR);
-        return null;
+        if (authProperties.getExclude() != null
+                && authProperties.getExclude()
+                && !this.exclude(key)) {
+            return null;
+        }
+        Object obj = guavaCacheSupport.getCache().getIfPresent(key);
+        if (obj == null) return null;
+        return obj.toString();
+    }
+
+    @Override
+    public String get(String key, Callable<Object> loader) throws ExecutionException {
+        if (authProperties.getExclude() != null
+                && authProperties.getExclude()
+                && !this.exclude(key)) {
+            return null;
+        }
+        return guavaCacheSupport.getCache().get(key, loader).toString();
+
     }
 
     @Override
     public Long getExpire(String key) {
-        log.warn(ERROR);
-        return null;
+        if (this.get(key) != null) return 1L;
+        return 0L;
     }
 
     @Override
     public void remove(String key) {
-        log.warn(ERROR);
+        guavaCacheSupport.getCache().invalidate(key);
+    }
+
+    @Override
+    public boolean exclude(String key) {
+        try {
+            return this.exclude(key, null);
+        } catch (ExecutionException e) {
+            log.error("exclude error:", e);
+        }
+        return false;
+    }
+
+    @Override
+    public boolean exclude(String key, Callable<Object> loader) throws ExecutionException {
+        String[] array = key.split(AuthConstant.HEAD_TOKEN_SEPARATOR);
+        if (array.length != 4) throw new AuthException(RestStatus.SYSTEM_CACHE_KEY_ERROR);
+        String userNo = array[0];
+        String excludeSerial = array[3].substring(1);
+        String keyExclude = "exclude-" + userNo;
+        String excludeSerialLast = "";
+        if (loader != null) {
+            Object groupLastObj = guavaCacheSupport.getCache().get(keyExclude, loader);
+            excludeSerialLast = groupLastObj.toString();
+        } else {
+            Object groupLastObj = guavaCacheSupport.getCache().getIfPresent(keyExclude);
+            if (groupLastObj != null) {
+                excludeSerialLast = groupLastObj.toString();
+            }
+        }
+        if (StringUtils.isEmpty(excludeSerialLast)) {
+            this.put(keyExclude, excludeSerial);
+            return true;
+        }
+        if (Long.parseLong(excludeSerial) >= Long.parseLong(excludeSerialLast)) {
+            this.put(keyExclude, excludeSerial);
+            return true;
+        }
+        return false;
     }
 }

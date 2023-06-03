@@ -7,6 +7,8 @@ public enum RestStatus {
 
     /*系统错误：*/
     SYSTEM_ERROR(9999, "系统异常"),
+    SYSTEM_CACHE_ERROR(9998, "系统缓存初始化异常"),
+    SYSTEM_CACHE_KEY_ERROR(9997, "系统缓存key解析异常"),
     /*用户类错误：2001-2999*/
     USER_NOLOGIIN(2001, "用户未登录"),
     USER_DISABLED(2002, "用户不可用"),

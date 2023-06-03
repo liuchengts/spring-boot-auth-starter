@@ -22,27 +22,40 @@ import java.util.Map;
 @Component
 public class AuthServiceImpl implements AuthService {
     private final static org.slf4j.Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
-    @Autowired
+    final
     CacheService cacheService;
-    @Autowired
     ObjectMapper objectMapper;
-    @Autowired
     AuthProperties authProperties;
     final static String TOKEN_NAME = AuthConstant.HEAD_TOKEN_NAME.toLowerCase();
+
+    public AuthServiceImpl(CacheService cacheService, ObjectMapper objectMapper, AuthProperties authProperties) {
+        this.cacheService = cacheService;
+        this.objectMapper = objectMapper;
+        this.authProperties = authProperties;
+    }
 
     @Override
     public String auth(String group, String userNo, String roles, Map<String, Object> parameters,
                        HttpServletResponse response, HttpServletRequest request) throws Exception {
         Map<String, String> oldTokenMap = analysisToken(request);
-        //删除原有的token
-        delToken(oldTokenMap, response, request);
-        String key = userNo + AuthConstant.HEAD_TOKEN_SEPARATOR + group;
+        try {
+            //删除原有的token
+            delToken(oldTokenMap, response, request);
+        } catch (Exception e) {
+            delToken(response, request);
+        }
+        String key = String.join(AuthConstant.HEAD_TOKEN_SEPARATOR, userNo, group, System.currentTimeMillis() + "");
+        if (authProperties.getExclude()) {
+            key = String.join(AuthConstant.HEAD_TOKEN_SEPARATOR, key, "E" + System.currentTimeMillis());
+        }
+        log.info("生成的key:{}", key);
         //生成token
-        String token = AESUtil.encrypt(key + AuthConstant.HEAD_TOKEN_SEPARATOR + System.currentTimeMillis(), authProperties.getDomain());
+        String token = AESUtil.encrypt(key, authProperties.getDomain());
         if (parameters == null) parameters = new HashMap<>();
         parameters.put(AuthConstant.SESSION_USER_NO, userNo);
         parameters.put(AuthConstant.SESSION_ROLES, roles);
-        cacheService.put(authProperties.getTokenPrefix() + key, objectMapper.writeValueAsString(parameters), authProperties.getOverdueTime());
+        cacheService.put(authProperties.getTokenPrefix() + key, objectMapper.writeValueAsString(parameters),
+                authProperties.getOverdueTime());
         CookieUtils.setCookie(request, response, TOKEN_NAME, token, authProperties.getOverdueTime().intValue());
         response.setHeader(TOKEN_NAME, token);
         return token;
@@ -50,8 +63,10 @@ public class AuthServiceImpl implements AuthService {
 
     private void delToken(Map<String, String> oldTokenMap, HttpServletResponse response, HttpServletRequest request) {
         if (oldTokenMap.isEmpty() || !oldTokenMap.containsKey(AuthConstant.MAP_KEY_KEY)) return;
-        cacheService.remove(authProperties.getTokenPrefix() + oldTokenMap.get(AuthConstant.MAP_KEY_KEY));
-        CookieUtils.deleteCookie(request, response, TOKEN_NAME);
+        if (authProperties.getExclude()) {
+            cacheService.remove(authProperties.getTokenPrefix() + oldTokenMap.get(AuthConstant.MAP_KEY_KEY));
+        }
+        delToken(response, request);
     }
 
     @Override
@@ -74,7 +89,15 @@ public class AuthServiceImpl implements AuthService {
         map.put(AuthConstant.MAP_KEY_USER_NO, keys[0]);
         map.put(AuthConstant.MAP_KEY_GROUP, keys[1]);
         map.put(AuthConstant.MAP_KEY_TIME, keys[2]);
-        map.put(AuthConstant.MAP_KEY_KEY, keys[0] + AuthConstant.HEAD_TOKEN_SEPARATOR + keys[1]);
+        String key = "";
+        if (authProperties.getExclude() != null && authProperties.getExclude()) {
+            if (keys.length != 4) throw new AuthException(RestStatus.SYSTEM_CACHE_KEY_ERROR);
+            key = String.join(AuthConstant.HEAD_TOKEN_SEPARATOR, keys[0], keys[1], keys[2], keys[3]);
+        } else {
+            key = String.join(AuthConstant.HEAD_TOKEN_SEPARATOR, keys[0], keys[1], keys[2]);
+        }
+        log.info("解析获得的key:{}", key);
+        map.put(AuthConstant.MAP_KEY_KEY, key);
         return map;
     }
 
@@ -84,9 +107,15 @@ public class AuthServiceImpl implements AuthService {
             delToken(analysisToken(request), response, request);
             return true;
         } catch (Exception e) {
-            log.error("deleteAuth", e);
+            delToken(response, request);
+            log.error("deleteAuth 强制删除错误的 token:", e);
             return false;
         }
+    }
+
+    private void delToken(HttpServletResponse response, HttpServletRequest request) {
+        response.setHeader(TOKEN_NAME, "");
+        CookieUtils.deleteCookie(request, response, TOKEN_NAME);
     }
 
     @Override
@@ -99,7 +128,8 @@ public class AuthServiceImpl implements AuthService {
         }
         if (tokenMap.isEmpty() || !tokenMap.containsKey(AuthConstant.MAP_KEY_KEY)) return false;
         try {
-            Long expire = cacheService.getExpire(authProperties.getTokenPrefix() + tokenMap.get(AuthConstant.MAP_KEY_KEY));
+            Long expire = cacheService.getExpire(authProperties.getTokenPrefix() +
+                    tokenMap.get(AuthConstant.MAP_KEY_KEY));
             if (expire <= 0) return false;
         } catch (Exception e) {
             throw new AuthException(RestStatus.SYSTEM_ERROR);
