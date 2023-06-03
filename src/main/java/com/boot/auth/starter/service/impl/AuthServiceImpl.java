@@ -47,7 +47,6 @@ public class AuthServiceImpl implements AuthService {
         if (authProperties.getExclude()) {
             key = String.join(AuthConstant.HEAD_TOKEN_SEPARATOR, key, "E" + System.currentTimeMillis());
         }
-        log.info("生成的key:{}", key);
         //生成token
         String token = AESUtil.encrypt(key, authProperties.getDomain());
         if (parameters == null) parameters = new HashMap<>();
@@ -95,7 +94,6 @@ public class AuthServiceImpl implements AuthService {
         } else {
             key = String.join(AuthConstant.HEAD_TOKEN_SEPARATOR, keys[0], keys[1], keys[2]);
         }
-        log.info("解析获得的key:{}", key);
         map.put(AuthConstant.MAP_KEY_KEY, key);
         return map;
     }

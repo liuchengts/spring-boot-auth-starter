@@ -7,40 +7,42 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "info.auth")
 public class AuthProperties {
     /**
-     * token 前缀
+     * （必须）token 前缀
      */
     private String tokenPrefix;
     /**
-     * 授权过期时间，单位（秒）
+     * （必须）授权过期时间，单位（秒）
      */
     private Long overdueTime;
     /**
-     * 域名
+     * （必须）域名
      */
     private String domain;
 
     /**
-     * 开启排他授权
+     * （非必须）开启排他授权
+     *  开启后同一个账户只有最后登录令牌有效，前面生成的令牌会被废弃
+     *  默认不开启，即只要认证成功，在令牌有效期内都是有效的（一个账户可以多端同时登录）
      */
     private Boolean exclude;
 
     /**
-     * 设置缓存容器的初始容量
+     * （非必须）设置缓存容器的初始容量
      */
     private Integer cacheInitialCapacity;
 
     /**
-     * 设置缓存最大容量，超过之后就会按照LRU最近虽少使用算法来移除缓存项
+     * （非必须）设置缓存最大容量，超过之后就会按照LRU最近虽少使用算法来移除缓存项
      */
     private Long cacheMaximumSize;
 
     /**
-     * 开启缓存统计
+     * （非必须）开启缓存统计
      */
     private Boolean cacheStats;
 
     /**
-     * 启用loadingCache
+     * （非必须）启用loadingCache
      */
     private Boolean loadingCache;
 
