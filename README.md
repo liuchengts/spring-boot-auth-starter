@@ -164,5 +164,9 @@ public class LogServiceImpl extends DefaultLogServiceImpl {
 
 
 ## 五、版本发布说明
+* 1.0.0 基本的权限拦截等功能
+* 1.0.1 增加自定义日志、拦截输出等功能；去掉非必须依赖的`lombok` 插件(便于适应`kotlin`的`kpt`插件编译)
+* 1.0.2 修改输出`json`的编码为`utf-8`
+* 1.0.3 ~ 1.0.5 若干`bug`修复
 * 1.0.6 去掉`redis`支持，改由`CacheService`类提供自定义缓存
 * 1.0.7 增加`guava`缓存实现；增加排他性的授权认证；支持自定义缓存存储方案；
