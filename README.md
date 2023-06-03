@@ -3,7 +3,7 @@
 ## 重要声明
 * 本分支由`1.0.7`为第一个版本，此版本默认提供`guava`存储令牌的功能
 * 根据`guava`的缓存特性，提供了`2`种缓存方案(`LoadingCache、Cache`)
-* 如果需要使用`redis`存储方案，参考: [四、自定义功能及开发](#jump) ；或请直接使用`1.0.5`版本（它的源代码位于`master`分支）
+* 如果需要使用`redis`存储方案，参考: [四、自定义功能及开发](#jump) ；或请直接使用`1.0.5`版本
 
 ## 一、使用前需要的准备
 * maven中央仓库地址 [其他方式集成](https://search.maven.org/artifact/com.github.liuchengts/spring-boot-auth-starter)
