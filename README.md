@@ -11,7 +11,7 @@
 <dependency>
     <groupId>com.github.liuchengts</groupId>
     <artifactId>spring-boot-auth-starter</artifactId>
-    <version>1.0.7</version>
+    <version>1.0.7.1</version>
 </dependency>
 ```
 * 声明一个接口来抽象具体的权限，可以继承 `com.boot.auth.starter.common.DefaultRolesConstant`
@@ -169,4 +169,5 @@ public class LogServiceImpl extends DefaultLogServiceImpl {
 * 1.0.2 修改输出`json`的编码为`utf-8`
 * 1.0.3 ~ 1.0.5 若干`bug`修复
 * 1.0.6 去掉`redis`支持，改由`CacheService`类提供自定义缓存
-* 1.0.7 增加`guava`缓存实现；增加排他性的授权认证；支持自定义缓存存储方案；
+* 1.0.7 增加`guava`缓存实现；增加排他性的授权认证；支持自定义缓存存储方案
+* 1.0.7.1 去掉敏感日志
