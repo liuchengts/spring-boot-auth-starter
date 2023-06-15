@@ -120,15 +120,18 @@ public class GuavaCacheSupport {
         //设置并发级别,并发级别是指可以同时写缓存的线程数
         cacheBuilder.concurrencyLevel(CPU_N);
         //设置缓存容器的初始容量为100
-        if (authProperties.getCacheInitialCapacity() > 0) {
+        if (authProperties.getCacheInitialCapacity() != null
+                && authProperties.getCacheInitialCapacity() > 0) {
             cacheBuilder.initialCapacity(authProperties.getCacheInitialCapacity());
         }
         //设置缓存最大容量为1000，超过1000之后就会按照LRU最近虽少使用算法来移除缓存项
-        if (authProperties.getCacheMaximumSize() > 0) {
+        if (authProperties.getCacheMaximumSize() != null
+                && authProperties.getCacheMaximumSize() > 0) {
             cacheBuilder.maximumSize(authProperties.getCacheMaximumSize());
         }
         //是否需要统计缓存情况,该操作消耗一定的性能,生产环境应该去除
-        if (authProperties.getCacheStats()) {
+        if (authProperties.getCacheStats() != null
+                && authProperties.getCacheStats()) {
             cacheBuilder.recordStats();
         }
         //设置写缓存后n秒钟过期
@@ -136,7 +139,8 @@ public class GuavaCacheSupport {
             cacheBuilder.expireAfterWrite(authProperties.getOverdueTime(), TimeUnit.SECONDS);
         }
         // 设置加载缓存的方法
-        if (authProperties.getLoadingCache()) {
+        if (authProperties.getLoadingCache() != null
+                && authProperties.getLoadingCache()) {
             if (this.getCacheLoader() == null) {
                 throw new AuthException(RestStatus.SYSTEM_CACHE_ERROR);
             }
