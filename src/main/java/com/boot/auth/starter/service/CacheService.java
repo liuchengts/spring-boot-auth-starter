@@ -7,6 +7,19 @@ import java.util.concurrent.ExecutionException;
  * 缓存业务
  */
 public interface CacheService {
+    /**
+     * 获取设置的缓存过期时间
+     *
+     * @return 缓存过期时间，单位秒
+     */
+    Long getOverdueTime();
+
+    /**
+     * 获取设置的排他属性
+     *
+     * @return true表示启用排他
+     */
+    Boolean getExclude();
 
     /**
      * 存储
@@ -54,8 +67,8 @@ public interface CacheService {
     /**
      * 排他性 get方法
      *
-     * @param keyExclude    要获取的key
-     * @param loader 加载方法
+     * @param keyExclude 要获取的key
+     * @param loader     加载方法
      * @return 获取内容
      */
     Object excludeGet(String keyExclude, Callable<Object> loader);

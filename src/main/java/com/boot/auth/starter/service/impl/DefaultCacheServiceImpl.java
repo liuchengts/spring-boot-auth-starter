@@ -35,6 +35,16 @@ public class DefaultCacheServiceImpl implements CacheService {
     }
 
     @Override
+    public Long getOverdueTime() {
+        return authProperties.getOverdueTime();
+    }
+
+    @Override
+    public Boolean getExclude() {
+        return authProperties.getExclude();
+    }
+
+    @Override
     public void put(String key, String data) {
         guavaCacheSupport.getCache().put(key, data);
     }

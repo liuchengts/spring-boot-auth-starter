@@ -31,9 +31,18 @@ public class GuavaCacheSupport {
     private CacheLoader<Object, Object> cacheLoader;
     private RemovalListener<Object, Object> removalListener;
     private final Executor EXECUTOR = Executors.newFixedThreadPool(CPU_N);
+    private Boolean ENABLE = true;
 
     public GuavaCacheSupport(AuthProperties authProperties) {
         this.authProperties = authProperties;
+    }
+
+    /**
+     * 不启用 GuavaCacheSupport
+     */
+    public void notEnabled() {
+        ENABLE = false;
+        log.warn("不启用 GuavaCacheSupport ");
     }
 
     public CacheStats stats() {
@@ -101,6 +110,10 @@ public class GuavaCacheSupport {
      * 自动判断当前可以自动初始化的缓存类型
      */
     public void autoCache() {
+        if (!ENABLE) {
+            log.warn("未启用 GuavaCacheSupport ");
+            return;
+        }
         if (authProperties.getLoadingCache()) {
             if (this.loadingCache == null) createCache();
         } else {

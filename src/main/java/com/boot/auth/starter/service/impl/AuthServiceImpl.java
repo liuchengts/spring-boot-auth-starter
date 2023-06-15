@@ -36,8 +36,8 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public String auth(String group, String userNo, String roles, Map<String, Object> parameters,
                        HttpServletResponse response, HttpServletRequest request) throws Exception {
-        Map<String, String> oldTokenMap = analysisToken(request);
         try {
+            Map<String, String> oldTokenMap = analysisToken(request);
             //删除原有的token
             delToken(oldTokenMap, response, request);
         } catch (Exception e) {
