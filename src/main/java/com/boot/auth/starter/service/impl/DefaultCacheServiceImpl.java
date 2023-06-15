@@ -68,6 +68,21 @@ public class DefaultCacheServiceImpl implements CacheService {
     }
 
     @Override
+    public Object excludeGet(String keyExclude) {
+        return guavaCacheSupport.getCache().getIfPresent(keyExclude);
+    }
+
+    @Override
+    public Object excludeGet(String keyExclude, Callable<Object> loader) {
+        try {
+            return guavaCacheSupport.getCache().get(keyExclude, loader);
+        } catch (ExecutionException e) {
+            log.error("excludeGet [" + keyExclude + "]", e);
+        }
+        return null;
+    }
+
+    @Override
     public Long getExpire(String key) {
         if (this.get(key) != null) return 1L;
         return 0L;
@@ -97,10 +112,10 @@ public class DefaultCacheServiceImpl implements CacheService {
         String keyExclude = "exclude-" + userNo;
         String excludeSerialLast = "";
         if (loader != null) {
-            Object groupLastObj = guavaCacheSupport.getCache().get(keyExclude, loader);
+            Object groupLastObj = excludeGet(keyExclude, loader);
             excludeSerialLast = groupLastObj.toString();
         } else {
-            Object groupLastObj = guavaCacheSupport.getCache().getIfPresent(keyExclude);
+            Object groupLastObj = excludeGet(keyExclude);
             if (groupLastObj != null) {
                 excludeSerialLast = groupLastObj.toString();
             }

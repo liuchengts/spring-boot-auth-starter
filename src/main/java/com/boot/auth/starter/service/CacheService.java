@@ -44,6 +44,23 @@ public interface CacheService {
     String get(String key, Callable<Object> loader) throws ExecutionException;
 
     /**
+     * 排他性 get方法
+     *
+     * @param keyExclude 要获取的key
+     * @return 获取内容
+     */
+    Object excludeGet(String keyExclude);
+
+    /**
+     * 排他性 get方法
+     *
+     * @param keyExclude    要获取的key
+     * @param loader 加载方法
+     * @return 获取内容
+     */
+    Object excludeGet(String keyExclude, Callable<Object> loader);
+
+    /**
      * 查询过期时间
      *
      * @param key 要查询的key
