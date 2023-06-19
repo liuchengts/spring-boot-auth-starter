@@ -252,7 +252,7 @@ public class LogServiceImpl extends DefaultLogServiceImpl {
     @Override
     public Object excludeGet(String keyExclude) {
         String value = stringRedisTemplate.opsForValue().get(keyExclude);
-        Object runValue = new Object();
+        Object runValue = null;
         if (StringUtils.hasText(value)) {
             runValue = value;
         }
