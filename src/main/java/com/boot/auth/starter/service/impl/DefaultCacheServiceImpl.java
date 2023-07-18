@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import javax.security.auth.kerberos.KerberosKey;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
@@ -46,7 +47,11 @@ public class DefaultCacheServiceImpl implements CacheService {
 
     @Override
     public void put(String key, String data) {
-        guavaCacheSupport.getCache().put(key, data);
+        if (authProperties.getLoadingCache()) {
+            guavaCacheSupport.getLoadingCache().put(key, data);
+        } else {
+            guavaCacheSupport.getCache().put(key, data);
+        }
     }
 
     @Override
@@ -61,7 +66,16 @@ public class DefaultCacheServiceImpl implements CacheService {
                 && !this.exclude(key)) {
             return null;
         }
-        Object obj = guavaCacheSupport.getCache().getIfPresent(key);
+        Object obj = null;
+        if (authProperties.getLoadingCache()) {
+            try {
+                obj = guavaCacheSupport.getLoadingCache().get(key);
+            } catch (ExecutionException e) {
+                log.error("LoadingCache error key:{}", key, e);
+            }
+        } else {
+            obj = guavaCacheSupport.getCache().getIfPresent(key);
+        }
         if (obj == null) return null;
         return obj.toString();
     }
@@ -73,19 +87,38 @@ public class DefaultCacheServiceImpl implements CacheService {
                 && !this.exclude(key)) {
             return null;
         }
-        return guavaCacheSupport.getCache().get(key, loader).toString();
+        Object obj = null;
+        if (authProperties.getLoadingCache()) {
+            try {
+                if (loader == null) {
+                    obj = guavaCacheSupport.getLoadingCache().get(key);
+                } else {
+                    obj = guavaCacheSupport.getLoadingCache().get(key, loader);
+                }
+            } catch (ExecutionException e) {
+                log.error("LoadingCache error key:{}", key, e);
+            }
+        } else {
+            if (loader == null) {
+                obj = guavaCacheSupport.getCache().getIfPresent(key);
+            } else {
+                obj = guavaCacheSupport.getCache().get(key, loader);
+            }
+        }
+        if (obj == null) return null;
+        return obj.toString();
 
     }
 
     @Override
     public Object excludeGet(String keyExclude) {
-        return guavaCacheSupport.getCache().getIfPresent(keyExclude);
+        return get(keyExclude);
     }
 
     @Override
     public Object excludeGet(String keyExclude, Callable<Object> loader) {
         try {
-            return guavaCacheSupport.getCache().get(keyExclude, loader);
+            return get(keyExclude, loader);
         } catch (ExecutionException e) {
             log.error("excludeGet [" + keyExclude + "]", e);
         }
@@ -100,7 +133,11 @@ public class DefaultCacheServiceImpl implements CacheService {
 
     @Override
     public void remove(String key) {
-        guavaCacheSupport.getCache().invalidate(key);
+        if (authProperties.getLoadingCache()) {
+            guavaCacheSupport.getLoadingCache().invalidate(key);
+        } else {
+            guavaCacheSupport.getCache().invalidate(key);
+        }
     }
 
     @Override

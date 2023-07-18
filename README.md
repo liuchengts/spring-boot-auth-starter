@@ -22,7 +22,7 @@
 
 * 声明一个接口来抽象具体的权限，可以继承 `com.boot.auth.starter.common.DefaultRolesConstant`
 
-```
+```java
 /**
  * 当前服务自定义的权限，权限为平级验证，不是包含关系
  * 即 某资源  满足 user1或者user2即可
@@ -77,7 +77,7 @@ info:
 * 如果只使用`@Auth` 而不增加 `roles`属性，则会应用默认的权限验证`DefaultRolesConstant.DEFAULT`
 * 本注解体现效果是进行登录验证后马上进行权限验证，通过后即可访问资源
 
-```
+```java
     // 在方法上使用，只对当前方法有效
     @Auth
     @GetMapping("/auth1")
@@ -87,7 +87,7 @@ info:
     }
 ```
 
-```
+```java
     // 在类上使用，对整个类的方法都有效，
     // 此时可以在方法上穿插使用 @NoAuthGetSession @IgnoreLogin 注解
     @Auth(roles = {RolesConstant.USER_1, RolesConstant.USER_2})
@@ -116,7 +116,7 @@ info:
 * 即在有`@Auth`的情况下可以忽略`@Auth`的登录验证及权限设置，没有任何阻拦直接访问对应资源
 * 本注解体现效果是仿佛没有启用本模块的功能。但是不能保证`session`对象是有值的
 
-```
+```java
     @IgnoreLogin
     @GetMapping("/auth3")
     public Session testAuth3(Session session) {
@@ -132,7 +132,7 @@ info:
 * 即在有`@Auth`的情况下只会进行登录验证，忽略`@Auth`的权限设置，访问对应资源
 * 本注解体现效果是在方法上`session`会自动注入当前登录者的信息
 
-```
+```java
     @NoAuthGetSession
     @GetMapping("/auth2")
     public Session testAuth2(Session session) {
@@ -147,7 +147,7 @@ info:
 * 额外字段使用 `com.boot.auth.starter.bo.RequestHeaderBO` 中的属性写到请求的 `header` 中
 * 如果想启用它，需要自定义增加一个声明
 
-```
+```java
 /**
 * 在这里自己定义日志类型
   **/
@@ -166,7 +166,8 @@ info:
 
 * 然后在需要记录日志的方法上加上以下处理
 
-```
+```java
+
     @OperLog(operType = OperLogConstant.SERVICE2)
     @Auth(roles = RolesConstant.USER_1)
     @GetMapping("/2")
@@ -179,7 +180,7 @@ info:
 
 * 自定义日志记录的方式（继承 `DefaultLogServiceImpl` 覆写`addLog`方法）
 
-```
+```java
 @Primary
 @Service
 public class LogServiceImpl extends DefaultLogServiceImpl {
@@ -195,7 +196,7 @@ public class LogServiceImpl extends DefaultLogServiceImpl {
 
 * (非必须)如果不想使用默认权限拦截后的消息输出，可以继承`DefaultOutJsonServiceImpl`覆写`errorOutJson`方法，增加自定义处理:
 
- ```
+ ```java
  @Primary
  @Service
  public class OutJsonServiceImpl extends DefaultOutJsonServiceImpl {
@@ -218,7 +219,7 @@ public class LogServiceImpl extends DefaultLogServiceImpl {
 
 - (非必须)如果不想使用默认的缓存方案，可以继承`DefaultCacheServiceImpl`覆写如下方法:
 
- ```
+ ```java
  @Primary
  @Service
  public class CacheServiceImpl extends DefaultCacheServiceImpl {
@@ -273,67 +274,188 @@ public class LogServiceImpl extends DefaultLogServiceImpl {
  ```
 
 ## 五、自定义`GuavaCacheSupport`下的加载器方案
-
+#### 注意：使用自定义加载方案一定要设置`info.auth.loadingCache=true`
 - (非必须)方法如下:
 
- ```
- @Primary
+ ```kotlin
 @Component
- public class CacheLoaderImpl {
-    final
-    GuavaCacheSupport guavaCacheSupport;
-
-    public CacheLoaderImpl(GuavaCacheSupport guavaCacheSupport) {
-        this.guavaCacheSupport = guavaCacheSupport;
-    }
+class CacheLoaderImpl @Autowired
+constructor(
+    private val tokenRepository: TokenRepository,
+    private val guavaCacheSupport: GuavaCacheSupport
+) {
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     @PostConstruct
-    public void init() {
+    fun init() {
         // 设置全局加载器
-        guavaCacheSupport.setCacheLoader(new GlobalCacheLoader());
+        guavaCacheSupport.cacheLoader = GlobalCacheLoader(tokenRepository)
         // 设置全局移除监听器
-        guavaCacheSupport.setRemovalListener(getRemovalListener());
-    }
-
-    /**
-     * db查询
-     *
-     * @param key 查询条件
-     * @return 查询结果
-     */
-    public Map<String, Account> getDb(String key) {
-        // 根据key 从数据库中查询出来
-        Map<String, Account> map = new HashMap<>();
-        // 这里假设 Account.findAccount() 方法可以得到一个 Account 对象
-        map.put(key, Account.findAccount());
-        return map;
+        guavaCacheSupport.removalListener = getRemovalListener()
     }
 
     /**
      * 全局缓存加载器
      */
-    public class GlobalCacheLoader extends CacheLoader<Object, Object> {
+    class GlobalCacheLoader(private val tokenRepository: TokenRepository) : CacheLoader<Any, Any>() {
+        private val logger = LoggerFactory.getLogger(javaClass)
 
-        @Override
-        public Object load(Object key) throws Exception {
-            // 这里开始加载缓存数据
-            return getDb(key.toString());
+        @Throws(Exception::class)
+        override fun load(key: Any): Any {
+            val optional = tokenRepository.findByKey(key.toString())
+            var value = ""
+            optional.ifPresent {
+                value = it.value!!
+            }
+            logger.info("CacheLoader key:$key value:$value")
+            return value
         }
+
     }
 
     /**
      * 全局移除事件监听
      */
-    private RemovalListener<Object, Object> getRemovalListener() {
-        return notification -> {
-            log.warn("移除缓存 key:{} value:{}", notification.getKey(), notification.getValue());
-            // 下面是移除了缓存需要做的事情
-        };
+    private fun getRemovalListener(): RemovalListener<Any, Any> {
+        return RemovalListener { (key, value): RemovalNotification<Any, Any> ->
+            logger.warn("移除缓存 key:{} value:{}", key, value)
+            tokenRepository.findByKey(key.toString()).ifPresent { tokenRepository.delete(it) }
+        }
     }
- }
+}
  ```
 
-## 六、版本发布说明
+## 六、使用数据作为缓存方案的实现：
+- 第一步：建一张数据表，用来存放授权信息，此处省略`Repository`请自行添加，我定义的是`TokenRepository`
+```kotlin
+  /****
+   * 授权
+   */
+  @Entity
+  @Table(
+      name = "token_t",
+      indexes = [
+          Index(name = "token_t_key_n", columnList = "key_n")
+      ]
+  )
+  @DynamicUpdate
+  @DynamicInsert
+  data class TokenModel(
+      @Id
+      @Column(name = "id", columnDefinition = "bigint(20) COMMENT 'ID,自增'")
+      @GeneratedValue(strategy = GenerationType.IDENTITY)
+      var id: Long? = null,
+  
+      @Column(name = "key_n", columnDefinition = "longtext COMMENT 'key'", unique = true)
+      var key: String? = null,
+  
+      @Column(name = "value_n", columnDefinition = "longtext COMMENT '用户名'")
+      var value: String? = null,
+  
+      @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+      @Column(name = "create_at", columnDefinition = "datetime COMMENT '创建时间'", nullable = false)
+      var createAt: LocalDateTime? = null,
+  
+      @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+      @Column(name = "update_at", columnDefinition = "datetime COMMENT '修改时间'", nullable = false)
+      var updateAt: LocalDateTime? = null
+  ) {
+  
+  
+      /**
+       * 触发jpa update代码需要执行的逻辑
+       */
+      @PreUpdate
+      fun preUpdate() {
+          updateAt = LocalDateTime.now()
+      }
+  
+      /**
+       * 自动设置必要字段的值
+       */
+      @PrePersist
+      fun prePersist() {
+          updateAt = LocalDateTime.now()
+          createAt = updateAt
+      }
+  }
+```
+- 第二步：自定义缓存加载器
+```kotlin
+  @Component
+  class CacheLoaderImpl @Autowired
+  constructor(
+  private val tokenRepository: TokenRepository,
+  private val guavaCacheSupport: GuavaCacheSupport
+  ) {
+  private val logger = LoggerFactory.getLogger(javaClass)
+  
+      @PostConstruct
+      fun init() {
+          // 设置全局加载器
+          guavaCacheSupport.cacheLoader = GlobalCacheLoader(tokenRepository)
+          // 设置全局移除监听器
+          guavaCacheSupport.removalListener = getRemovalListener()
+      }
+  
+      /**
+       * 全局缓存加载器
+       */
+      class GlobalCacheLoader(private val tokenRepository: TokenRepository) : CacheLoader<Any, Any>() {
+          private val logger = LoggerFactory.getLogger(javaClass)
+  
+          @Throws(Exception::class)
+          override fun load(key: Any): Any {
+              val optional = tokenRepository.findByKey(key.toString())
+              var value = ""
+              optional.ifPresent {
+                  value = it.value!!
+              }
+              logger.info("CacheLoader key:$key value:$value")
+              return value
+          }
+  
+      }
+  
+      /**
+       * 全局移除事件监听
+       */
+      private fun getRemovalListener(): RemovalListener<Any, Any> {
+          return RemovalListener { (key, value): RemovalNotification<Any, Any> ->
+              logger.warn("移除缓存 key:{} value:{}", key, value)
+              tokenRepository.findByKey(key.toString()).ifPresent { tokenRepository.delete(it) }
+          }
+      }
+  }
+```
+- 第三步：自定义缓存实现
+```kotlin
+  @Primary
+  @Component
+  class CacheServiceImpl @Autowired
+  constructor(
+  guavaCacheSupport: GuavaCacheSupport,
+  authProperties: AuthProperties,
+  private val tokenRepository: TokenRepository
+  ) : DefaultCacheServiceImpl(guavaCacheSupport, authProperties) {
+  
+      override fun put(key: String, data: String) {
+          super.put(key, data)
+          val optional = tokenRepository.findByKey(key)
+          var token = TokenModel()
+          if (optional.isPresent) {
+              token = optional.get()
+              token.value = data
+          } else {
+              token.key = key
+              token.value = data
+          }
+          tokenRepository.save(token)
+      }
+}
+```
+
+## 七、版本发布说明
 
 * 1.0.0 基本的权限拦截等功能
 * 1.0.1 增加自定义日志、拦截输出等功能；去掉非必须依赖的`lombok` 插件(便于适应`kotlin`的`kpt`插件编译)
@@ -343,3 +465,4 @@ public class LogServiceImpl extends DefaultLogServiceImpl {
 * 1.0.7 增加`guava`缓存实现；增加排他性的授权认证；支持自定义缓存存储方案
 * 1.0.7.1 去掉敏感日志
 * 1.0.7.2 增强自定义缓存存储方案的接口扩展
+* 1.0.7.3 增强使用数据库作为原始缓存数据方案的支持

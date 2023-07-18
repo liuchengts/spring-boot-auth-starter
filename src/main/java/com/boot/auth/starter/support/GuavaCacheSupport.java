@@ -14,10 +14,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * 基于 guava 的缓存
+ * 2023/6/3 12:45
+ *
  * @author liucheng
  * @version 1.0
- * @description: 基于 guava 的缓存
- * @date 2023/6/3 12:45
  */
 @Scope
 @Component
@@ -50,7 +51,9 @@ public class GuavaCacheSupport {
             log.warn("未启用缓存统计");
             return null;
         }
-        CacheStats stats = cache.stats();
+        CacheStats stats = null;
+        if (cache != null) stats = cache.stats();
+        else if (loadingCache != null) stats = loadingCache.stats();
         String buffer = "缓存状态查看=>" +
                 " [命中次数:" +
                 stats.hitCount() +
@@ -78,6 +81,7 @@ public class GuavaCacheSupport {
     }
 
     public LoadingCache<Object, Object> getLoadingCache() {
+        autoCache();
         return loadingCache;
     }
 
@@ -158,23 +162,11 @@ public class GuavaCacheSupport {
                 throw new AuthException(RestStatus.SYSTEM_CACHE_ERROR);
             }
             this.setLoadingCache(cacheBuilder.build(this.getCacheLoader()));
+            log.info("启用 loadingCache");
         } else {
             this.setCache(cacheBuilder.build());
+            log.info("启用 cache");
         }
         log.info("GuavaCache [创建完成]");
     }
-
-//    public static void main(String[] args) throws InterruptedException {
-//        AuthProperties authProperties = new AuthProperties();
-//        authProperties.setOverdueTime(99999999L);
-//        authProperties.setCacheInitialCapacity(100);
-//        authProperties.setCacheMaximumSize(200L);
-//        authProperties.setCacheStats(true);
-//        GuavaCacheSupport cacheSupport = new GuavaCacheSupport(authProperties);
-//
-//        cacheSupport.getCache().put("111111,," + System.currentTimeMillis(), "我是内容");
-//        Thread.sleep(3000l);
-//        cacheSupport.getCache().put("111111,," + System.currentTimeMillis(), "我是内容");
-//        log.info("map:{}", cacheSupport.getCache().asMap());
-//    }
 }
