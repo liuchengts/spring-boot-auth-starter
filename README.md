@@ -326,7 +326,8 @@ constructor(
  ```
 
 ## 六、使用数据作为缓存方案的实现：
-- 第一步：建一张数据表，用来存放授权信息，此处省略`Repository`请自行添加，我定义的是`TokenRepository`
+- 第一步：设置`info.auth.loadingCache=true`
+- 第二步：建一张数据表，用来存放授权信息，此处省略`Repository`请自行添加，我定义的是`TokenRepository`
 ```kotlin
   /****
    * 授权
@@ -380,7 +381,7 @@ constructor(
       }
   }
 ```
-- 第二步：自定义缓存加载器
+- 第三步：自定义缓存加载器
 ```kotlin
   @Component
   class CacheLoaderImpl @Autowired
@@ -428,7 +429,7 @@ constructor(
       }
   }
 ```
-- 第三步：自定义缓存实现
+- 第四步：自定义缓存实现
 ```kotlin
   @Primary
   @Component
