@@ -9,6 +9,7 @@ import com.boot.auth.starter.service.CacheService;
 import com.boot.auth.starter.utils.AESUtil;
 import com.boot.auth.starter.utils.CookieUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -20,7 +21,7 @@ import java.util.Map;
 
 @Component
 public class AuthServiceImpl implements AuthService {
-    private final static org.slf4j.Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
+    private final static Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
     final
     CacheService cacheService;
     ObjectMapper objectMapper;
@@ -44,7 +45,7 @@ public class AuthServiceImpl implements AuthService {
             delToken(response, request);
         }
         String key = String.join(AuthConstant.HEAD_TOKEN_SEPARATOR, userNo, group, System.currentTimeMillis() + "");
-        if (authProperties.getExclude()) {
+        if (authProperties.getEnableExclude()) {
             key = String.join(AuthConstant.HEAD_TOKEN_SEPARATOR, key, "E" + System.currentTimeMillis());
         }
         //生成token
@@ -61,7 +62,7 @@ public class AuthServiceImpl implements AuthService {
 
     private void delToken(Map<String, String> oldTokenMap, HttpServletResponse response, HttpServletRequest request) {
         if (oldTokenMap.isEmpty() || !oldTokenMap.containsKey(AuthConstant.MAP_KEY_KEY)) return;
-        if (authProperties.getExclude()) {
+        if (authProperties.getEnableExclude()) {
             cacheService.remove(authProperties.getTokenPrefix() + oldTokenMap.get(AuthConstant.MAP_KEY_KEY));
         }
         delToken(response, request);
@@ -88,7 +89,7 @@ public class AuthServiceImpl implements AuthService {
         map.put(AuthConstant.MAP_KEY_GROUP, keys[1]);
         map.put(AuthConstant.MAP_KEY_TIME, keys[2]);
         String key = "";
-        if (authProperties.getExclude() != null && authProperties.getExclude()) {
+        if (authProperties.getEnableExclude() != null && authProperties.getEnableExclude()) {
             if (keys.length != 4) throw new AuthException(RestStatus.SYSTEM_CACHE_KEY_ERROR);
             key = String.join(AuthConstant.HEAD_TOKEN_SEPARATOR, keys[0], keys[1], keys[2], keys[3]);
         } else {

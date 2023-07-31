@@ -26,6 +26,11 @@ public class GuavaCacheSupport {
     private final static Logger log = LoggerFactory.getLogger(GuavaCacheSupport.class);
     final
     AuthProperties authProperties;
+
+    public GuavaCacheSupport(AuthProperties authProperties) {
+        this.authProperties = authProperties;
+    }
+
     private final int CPU_N = Runtime.getRuntime().availableProcessors();
     private Cache<Object, Object> cache;
     private LoadingCache<Object, Object> loadingCache;
@@ -33,10 +38,6 @@ public class GuavaCacheSupport {
     private RemovalListener<Object, Object> removalListener;
     private final Executor EXECUTOR = Executors.newFixedThreadPool(CPU_N);
     private Boolean ENABLE = true;
-
-    public GuavaCacheSupport(AuthProperties authProperties) {
-        this.authProperties = authProperties;
-    }
 
     /**
      * 不启用 GuavaCacheSupport
@@ -47,13 +48,14 @@ public class GuavaCacheSupport {
     }
 
     public CacheStats stats() {
-        if (!authProperties.getCacheStats()) {
+        if (!authProperties.getGuavaCache().getEnableCacheStats()) {
             log.warn("未启用缓存统计");
             return null;
         }
         CacheStats stats = null;
         if (cache != null) stats = cache.stats();
         else if (loadingCache != null) stats = loadingCache.stats();
+        assert stats != null;
         String buffer = "缓存状态查看=>" +
                 " [命中次数:" +
                 stats.hitCount() +
@@ -118,7 +120,7 @@ public class GuavaCacheSupport {
             log.warn("未启用 GuavaCacheSupport ");
             return;
         }
-        if (authProperties.getLoadingCache()) {
+        if (authProperties.getGuavaCache().getEnableLoadingCache()) {
             if (this.loadingCache == null) createCache();
         } else {
             if (this.cache == null) createCache();
@@ -130,25 +132,23 @@ public class GuavaCacheSupport {
         CacheBuilder<Object, Object> cacheBuilder;
         //设置缓存的异步移除通知
         if (this.getRemovalListener() != null) {
-            cacheBuilder = CacheBuilder.newBuilder().removalListener(RemovalListeners.asynchronous(removalListener, EXECUTOR));
+            cacheBuilder = CacheBuilder.newBuilder()
+                    .removalListener(RemovalListeners.asynchronous(removalListener, EXECUTOR));
         } else {
             cacheBuilder = CacheBuilder.newBuilder();
         }
         //设置并发级别,并发级别是指可以同时写缓存的线程数
         cacheBuilder.concurrencyLevel(CPU_N);
         //设置缓存容器的初始容量为100
-        if (authProperties.getCacheInitialCapacity() != null
-                && authProperties.getCacheInitialCapacity() > 0) {
-            cacheBuilder.initialCapacity(authProperties.getCacheInitialCapacity());
+        if (authProperties.getGuavaCache().getCacheInitialCapacity() > 0) {
+            cacheBuilder.initialCapacity(authProperties.getGuavaCache().getCacheInitialCapacity());
         }
         //设置缓存最大容量为1000，超过1000之后就会按照LRU最近虽少使用算法来移除缓存项
-        if (authProperties.getCacheMaximumSize() != null
-                && authProperties.getCacheMaximumSize() > 0) {
-            cacheBuilder.maximumSize(authProperties.getCacheMaximumSize());
+        if (authProperties.getGuavaCache().getCacheMaximumSize() > 0) {
+            cacheBuilder.maximumSize(authProperties.getGuavaCache().getCacheMaximumSize());
         }
         //是否需要统计缓存情况,该操作消耗一定的性能,生产环境应该去除
-        if (authProperties.getCacheStats() != null
-                && authProperties.getCacheStats()) {
+        if (authProperties.getGuavaCache().getEnableCacheStats()) {
             cacheBuilder.recordStats();
         }
         //设置写缓存后n秒钟过期
@@ -156,8 +156,7 @@ public class GuavaCacheSupport {
             cacheBuilder.expireAfterWrite(authProperties.getOverdueTime(), TimeUnit.SECONDS);
         }
         // 设置加载缓存的方法
-        if (authProperties.getLoadingCache() != null
-                && authProperties.getLoadingCache()) {
+        if (authProperties.getGuavaCache().getEnableLoadingCache()) {
             if (this.getCacheLoader() == null) {
                 throw new AuthException(RestStatus.SYSTEM_CACHE_ERROR);
             }

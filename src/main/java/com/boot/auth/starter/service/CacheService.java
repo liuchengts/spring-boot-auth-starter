@@ -107,5 +107,4 @@ public interface CacheService {
      * 执行loader可能导致的异常
      */
     boolean exclude(String key, Callable<Object> loader) throws ExecutionException;
-
 }
