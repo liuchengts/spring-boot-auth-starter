@@ -5,12 +5,13 @@ import com.boot.auth.starter.common.AuthProperties;
 import com.boot.auth.starter.common.RestStatus;
 import com.boot.auth.starter.exception.AuthException;
 import com.boot.auth.starter.service.CacheService;
+import com.boot.auth.starter.support.GuavaBloomSupport;
 import com.boot.auth.starter.support.GuavaCacheSupport;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import javax.security.auth.kerberos.KerberosKey;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
@@ -25,13 +26,17 @@ import java.util.concurrent.ExecutionException;
  */
 @Component
 public class DefaultCacheServiceImpl implements CacheService {
-    private final static org.slf4j.Logger log = LoggerFactory.getLogger(DefaultCacheServiceImpl.class);
+    private final static Logger log = LoggerFactory.getLogger(DefaultCacheServiceImpl.class);
     final
     GuavaCacheSupport guavaCacheSupport;
+    GuavaBloomSupport guavaBloomSupport;
     AuthProperties authProperties;
 
-    public DefaultCacheServiceImpl(GuavaCacheSupport guavaCacheSupport, AuthProperties authProperties) {
+    public DefaultCacheServiceImpl(GuavaCacheSupport guavaCacheSupport,
+                                   GuavaBloomSupport guavaBloomSupport,
+                                   AuthProperties authProperties) {
         this.guavaCacheSupport = guavaCacheSupport;
+        this.guavaBloomSupport = guavaBloomSupport;
         this.authProperties = authProperties;
     }
 
@@ -42,16 +47,17 @@ public class DefaultCacheServiceImpl implements CacheService {
 
     @Override
     public Boolean getExclude() {
-        return authProperties.getExclude();
+        return authProperties.getEnableExclude();
     }
 
     @Override
     public void put(String key, String data) {
-        if (authProperties.getLoadingCache()) {
+        if (authProperties.getGuavaCache().getEnableLoadingCache()) {
             guavaCacheSupport.getLoadingCache().put(key, data);
         } else {
             guavaCacheSupport.getCache().put(key, data);
         }
+        guavaBloomSupport.put(key);
     }
 
     @Override
@@ -61,13 +67,17 @@ public class DefaultCacheServiceImpl implements CacheService {
 
     @Override
     public String get(String key) {
-        if (authProperties.getExclude() != null
-                && authProperties.getExclude()
+        Boolean bloomRes = guavaBloomSupport.mightContain(key);
+        if (bloomRes != null && !bloomRes) {
+            log.warn("BloomFilter 拦截 不存在");
+            return null;
+        }
+        if (authProperties.getEnableExclude()
                 && !this.exclude(key)) {
             return null;
         }
         Object obj = null;
-        if (authProperties.getLoadingCache()) {
+        if (authProperties.getGuavaCache().getEnableLoadingCache()) {
             try {
                 obj = guavaCacheSupport.getLoadingCache().get(key);
             } catch (ExecutionException e) {
@@ -82,13 +92,17 @@ public class DefaultCacheServiceImpl implements CacheService {
 
     @Override
     public String get(String key, Callable<Object> loader) throws ExecutionException {
-        if (authProperties.getExclude() != null
-                && authProperties.getExclude()
+        if (authProperties.getEnableExclude()
                 && !this.exclude(key)) {
             return null;
         }
+        Boolean bloomRes = guavaBloomSupport.mightContain(key);
+        if (bloomRes != null && !bloomRes) {
+            log.warn("BloomFilter 拦截 不存在");
+            return null;
+        }
         Object obj = null;
-        if (authProperties.getLoadingCache()) {
+        if (authProperties.getGuavaCache().getEnableLoadingCache()) {
             try {
                 if (loader == null) {
                     obj = guavaCacheSupport.getLoadingCache().get(key);
@@ -133,7 +147,7 @@ public class DefaultCacheServiceImpl implements CacheService {
 
     @Override
     public void remove(String key) {
-        if (authProperties.getLoadingCache()) {
+        if (authProperties.getGuavaCache().getEnableLoadingCache()) {
             guavaCacheSupport.getLoadingCache().invalidate(key);
         } else {
             guavaCacheSupport.getCache().invalidate(key);
