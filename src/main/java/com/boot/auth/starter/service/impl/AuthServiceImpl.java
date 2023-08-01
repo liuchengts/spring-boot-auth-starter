@@ -16,6 +16,10 @@ import org.springframework.util.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -69,14 +73,14 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public Map<String, String> analysisToken(HttpServletRequest request) throws Exception {
+    public Map<String, String> analysisToken(HttpServletRequest request) {
         String token = request.getHeader(TOKEN_NAME);
         if (StringUtils.isEmpty(token)) token = CookieUtils.getCookieValue(request, TOKEN_NAME);
         return analysisToken(token);
     }
 
     @Override
-    public Map<String, String> analysisToken(String token) throws Exception {
+    public Map<String, String> analysisToken(String token) {
         Map<String, String> map = new HashMap<>();
         if (StringUtils.isEmpty(token)) return map;
         String decryptToken = AESUtil.decrypt(token, authProperties.getDomain());
@@ -88,6 +92,7 @@ public class AuthServiceImpl implements AuthService {
         map.put(AuthConstant.MAP_KEY_USER_NO, keys[0]);
         map.put(AuthConstant.MAP_KEY_GROUP, keys[1]);
         map.put(AuthConstant.MAP_KEY_TIME, keys[2]);
+        checkOverdueTime(Long.parseLong(keys[2]));
         String key = "";
         if (authProperties.getEnableExclude() != null && authProperties.getEnableExclude()) {
             if (keys.length != 4) throw new AuthException(RestStatus.SYSTEM_CACHE_KEY_ERROR);
@@ -99,6 +104,19 @@ public class AuthServiceImpl implements AuthService {
         return map;
     }
 
+    /**
+     * 校验 token 是否过期
+     *
+     * @param time token中记录的生成时间
+     */
+    private void checkOverdueTime(Long time) {
+        LocalDateTime tokenTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(time), ZoneId.systemDefault());
+        LocalDateTime overdueTime = tokenTime.plusSeconds(authProperties.getOverdueTime());
+        if (LocalDateTime.now().compareTo(overdueTime) > 0) {
+            throw new AuthException(RestStatus.USER_TOKEN_INVALID);
+        }
+    }
+
     @Override
     public Boolean deleteAuth(HttpServletResponse response, HttpServletRequest request) {
         try {
@@ -106,7 +124,6 @@ public class AuthServiceImpl implements AuthService {
             return true;
         } catch (Exception e) {
             delToken(response, request);
-            log.error("deleteAuth 强制删除错误的 token:", e);
             return false;
         }
     }

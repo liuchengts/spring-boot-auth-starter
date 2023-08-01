@@ -4,6 +4,7 @@ import com.boot.auth.starter.common.AuthConstant;
 import com.boot.auth.starter.common.AuthProperties;
 import com.boot.auth.starter.common.RestStatus;
 import com.boot.auth.starter.exception.AuthException;
+import com.boot.auth.starter.service.BloomFilterService;
 import com.boot.auth.starter.service.CacheService;
 import com.boot.auth.starter.support.GuavaBloomSupport;
 import com.boot.auth.starter.support.GuavaCacheSupport;
@@ -29,14 +30,14 @@ public class DefaultCacheServiceImpl implements CacheService {
     private final static Logger log = LoggerFactory.getLogger(DefaultCacheServiceImpl.class);
     final
     GuavaCacheSupport guavaCacheSupport;
-    GuavaBloomSupport guavaBloomSupport;
+    BloomFilterService bloomFilterService;
     AuthProperties authProperties;
 
     public DefaultCacheServiceImpl(GuavaCacheSupport guavaCacheSupport,
-                                   GuavaBloomSupport guavaBloomSupport,
+                                   BloomFilterService bloomFilterService,
                                    AuthProperties authProperties) {
         this.guavaCacheSupport = guavaCacheSupport;
-        this.guavaBloomSupport = guavaBloomSupport;
+        this.bloomFilterService = bloomFilterService;
         this.authProperties = authProperties;
     }
 
@@ -57,7 +58,7 @@ public class DefaultCacheServiceImpl implements CacheService {
         } else {
             guavaCacheSupport.getCache().put(key, data);
         }
-        guavaBloomSupport.notContainPut(key);
+        bloomFilterService.notContainPut(key);
     }
 
     @Override
@@ -85,11 +86,6 @@ public class DefaultCacheServiceImpl implements CacheService {
         if (authProperties.getGuavaCache().getEnableLoadingCache()) {
             try {
                 if (loader == null) {
-                    Boolean bloomRes = guavaBloomSupport.mightContain(key);
-                    if (bloomRes != null && !bloomRes) {
-                        log.warn("BloomFilter 拦截 不存在");
-                        return null;
-                    }
                     obj = guavaCacheSupport.getLoadingCache().get(key);
                 } else {
                     obj = guavaCacheSupport.getLoadingCache().get(key, loader);
@@ -99,9 +95,9 @@ public class DefaultCacheServiceImpl implements CacheService {
             }
         } else {
             if (loader == null) {
-                Boolean bloomRes = guavaBloomSupport.mightContain(key);
+                Boolean bloomRes = bloomFilterService.mightContain(key);
                 if (bloomRes != null && !bloomRes) {
-                    log.warn("BloomFilter 拦截 不存在");
+                    log.warn("BloomFilter 不存在");
                     return null;
                 }
                 obj = guavaCacheSupport.getCache().getIfPresent(key);
@@ -116,11 +112,6 @@ public class DefaultCacheServiceImpl implements CacheService {
 
     @Override
     public String get(String key, Boolean enableExclude) {
-        Boolean bloomRes = guavaBloomSupport.mightContain(key);
-        if (bloomRes != null && !bloomRes) {
-            log.warn("BloomFilter 拦截 不存在");
-            return null;
-        }
         if (enableExclude && !this.exclude(key)) {
             return null;
         }
@@ -132,6 +123,11 @@ public class DefaultCacheServiceImpl implements CacheService {
                 log.error("LoadingCache error key:{}", key, e);
             }
         } else {
+            Boolean bloomRes = bloomFilterService.mightContain(key);
+            if (bloomRes != null && !bloomRes) {
+                log.warn("BloomFilter 不存在");
+                return null;
+            }
             obj = guavaCacheSupport.getCache().getIfPresent(key);
         }
         if (obj == null) return null;
@@ -199,9 +195,14 @@ public class DefaultCacheServiceImpl implements CacheService {
             this.put(keyExclude, excludeSerial);
             return true;
         }
-        if (Long.parseLong(excludeSerial) >= Long.parseLong(excludeSerialLast)) {
-            this.put(keyExclude, excludeSerial);
-            return true;
+        try {
+            if (Long.parseLong(excludeSerial) >= Long.parseLong(excludeSerialLast)) {
+                this.put(keyExclude, excludeSerial);
+                return true;
+            }
+        } catch (NumberFormatException e) {
+            log.warn("当前系统已强制启用 enableExclude");
+            return false;
         }
         return false;
     }

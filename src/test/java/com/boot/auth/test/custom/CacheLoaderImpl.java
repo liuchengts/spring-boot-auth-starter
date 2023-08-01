@@ -1,8 +1,12 @@
 package com.boot.auth.test.custom;
 
+import com.boot.auth.starter.common.AuthConstant;
 import com.boot.auth.starter.common.AuthProperties;
+import com.boot.auth.starter.support.GuavaBloomSupport;
 import com.boot.auth.starter.support.GuavaCacheSupport;
-import com.boot.auth.test.common.TokenModel;
+import com.boot.auth.test.common.AccountModel;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.RemovalListener;
 import org.slf4j.Logger;
@@ -25,12 +29,12 @@ import java.util.Map;
 public class CacheLoaderImpl {
     final
     GuavaCacheSupport guavaCacheSupport;
-    AuthProperties authProperties;
+    ObjectMapper objectMapper;
 
     public CacheLoaderImpl(GuavaCacheSupport guavaCacheSupport,
-                           AuthProperties authProperties) {
+                           ObjectMapper objectMapper) {
         this.guavaCacheSupport = guavaCacheSupport;
-        this.authProperties = authProperties;
+        this.objectMapper = objectMapper;
     }
 
     private final static Logger log = LoggerFactory.getLogger(CacheLoaderImpl.class);
@@ -50,13 +54,15 @@ public class CacheLoaderImpl {
      * @param key 查询条件
      * @return 查询结果
      */
-    public String getDb(String key) {
+    public String getDb(String key) throws JsonProcessingException {
         // 根据key 从数据库中查询出来
-        if (authProperties.getEnableExclude()) {
-            return TokenModel.findEnableExcludeToken().getKey();
-        } else {
-            return TokenModel.findDisabledExcludeToken().getKey();
-        }
+        Map<String, Object> map = new HashMap<>();
+        AccountModel accountModel = AccountModel.findAccount();
+        map.put(AuthConstant.SESSION_NICK_NAME, accountModel.getNickName());
+        map.put(AuthConstant.SESSION_USER_NO, accountModel.getUserNo());
+        map.put(AuthConstant.SESSION_ROLES, accountModel.getRoles());
+        map.put(AuthConstant.MAP_KEY_GROUP, accountModel.getGroup());
+        return objectMapper.writeValueAsString(map);
     }
 
     /**

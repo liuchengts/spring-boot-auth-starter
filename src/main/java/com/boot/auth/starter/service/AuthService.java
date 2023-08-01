@@ -35,7 +35,7 @@ public interface AuthService {
      * @param request HttpServletRequest
      * @return token内容
      */
-    Map<String, String> analysisToken(HttpServletRequest request) throws Exception;
+    Map<String, String> analysisToken(HttpServletRequest request);
 
     /**
      * 解析 token
@@ -43,13 +43,13 @@ public interface AuthService {
      * @param token token
      * @return token内容
      */
-    Map<String, String> analysisToken(String token) throws Exception;
+    Map<String, String> analysisToken(String token);
 
     /**
      * 删除当前请求者的auth
      *
-     * @param response   http response
-     * @param request    http request
+     * @param response http response
+     * @param request  http request
      */
     Boolean deleteAuth(HttpServletResponse response, HttpServletRequest request);
 

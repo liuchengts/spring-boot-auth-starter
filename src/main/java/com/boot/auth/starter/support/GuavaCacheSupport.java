@@ -42,7 +42,7 @@ public class GuavaCacheSupport {
     /**
      * 不启用 GuavaCacheSupport
      */
-    public void notEnabled() {
+    public void disabled() {
         ENABLE = false;
         log.warn("不启用 GuavaCacheSupport ");
     }

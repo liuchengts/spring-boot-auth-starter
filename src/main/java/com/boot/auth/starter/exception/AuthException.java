@@ -20,13 +20,13 @@ public class AuthException extends RuntimeException {
     }
 
     public AuthException(String msg, String code) {
-        super();
+        super(String.join(":", code, msg));
         this.msg = msg;
         this.code = code;
     }
 
     public AuthException(RestStatus restStatus) {
-        super();
+        super(String.join(":", String.valueOf(restStatus.value()), restStatus.getMsg()));
         this.msg = restStatus.getMsg();
         this.code = String.valueOf(restStatus.value());
     }

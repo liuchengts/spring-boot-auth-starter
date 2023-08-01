@@ -19,10 +19,7 @@ import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class AuthInterceptor extends HandlerInterceptorAdapter {
     private final static org.slf4j.Logger log = LoggerFactory.getLogger(AuthInterceptor.class);
@@ -134,8 +131,10 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
      */
     private LogicSession getSession(HttpServletResponse response, HttpServletRequest request) {
         try {
-            return sessionResolver.resolve(authService.analysisToken(request), getHeaderValue(request, AuthConstant.HEADER_KEY_PLATFORM),
-                    getHeaderValue(request, AuthConstant.HEADER_KEY_VERSION), IPUtils.getClientIP(request));
+            return sessionResolver.resolve(authService.analysisToken(request),
+                    getHeaderValue(request, AuthConstant.HEADER_KEY_PLATFORM),
+                    getHeaderValue(request, AuthConstant.HEADER_KEY_VERSION),
+                    IPUtils.getClientIP(request));
         } catch (Exception e) {
             log.error("getSession error ", e);
             authService.deleteAuth(response, request);
