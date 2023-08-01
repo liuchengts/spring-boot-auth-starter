@@ -41,7 +41,9 @@ public class GuavaBloomSupport {
      * 创建一个过滤器
      */
     private void createFilter() {
-        log.info("创建 Guava BloomFilter:{}", authProperties.getBloomFilter());
+        log.info("创建 Guava BloomFilter expectedInsertions:{} fpp:{}",
+                authProperties.getBloomFilter().getExpectedInsertions(),
+                authProperties.getBloomFilter().getFpp());
         stringBloomFilter = BloomFilter.create(stringFunnel(Charset.defaultCharset()),
                 authProperties.getBloomFilter().getExpectedInsertions(),
                 authProperties.getBloomFilter().getFpp());
@@ -54,7 +56,6 @@ public class GuavaBloomSupport {
      */
     private boolean isFilter() {
         if (stringBloomFilter == null) {
-            log.warn("未启用 BloomFilter");
             return false;
         }
         return true;
@@ -79,5 +80,17 @@ public class GuavaBloomSupport {
     public Boolean mightContain(String value) {
         if (!isFilter()) return null;
         return stringBloomFilter.mightContain(value);
+    }
+
+    /**
+     * 查找一个元素是否在布隆过滤器中存在，不存在就加入到过滤器中
+     *
+     * @param value 要查找/加入的元素
+     */
+    public void notContainPut(String value) {
+        Boolean mightContain = mightContain(value);
+        if (mightContain != null && !mightContain) {
+            put(value);
+        }
     }
 }
