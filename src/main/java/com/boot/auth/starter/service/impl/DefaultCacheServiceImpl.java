@@ -6,7 +6,6 @@ import com.boot.auth.starter.common.RestStatus;
 import com.boot.auth.starter.exception.AuthException;
 import com.boot.auth.starter.service.BloomFilterService;
 import com.boot.auth.starter.service.CacheService;
-import com.boot.auth.starter.support.GuavaBloomSupport;
 import com.boot.auth.starter.support.GuavaCacheSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

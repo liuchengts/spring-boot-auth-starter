@@ -1,8 +1,5 @@
 package com.boot.auth.starter.service;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-
 /**
  * 布隆过滤器业务
  */

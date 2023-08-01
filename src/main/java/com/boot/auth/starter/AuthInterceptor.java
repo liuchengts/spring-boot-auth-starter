@@ -19,7 +19,10 @@ import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 public class AuthInterceptor extends HandlerInterceptorAdapter {
     private final static org.slf4j.Logger log = LoggerFactory.getLogger(AuthInterceptor.class);
