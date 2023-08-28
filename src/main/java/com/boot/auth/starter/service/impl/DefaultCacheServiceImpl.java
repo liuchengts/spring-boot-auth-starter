@@ -4,7 +4,6 @@ import com.boot.auth.starter.common.AuthConstant;
 import com.boot.auth.starter.common.AuthProperties;
 import com.boot.auth.starter.common.RestStatus;
 import com.boot.auth.starter.exception.AuthException;
-import com.boot.auth.starter.service.BloomFilterService;
 import com.boot.auth.starter.service.CacheService;
 import com.boot.auth.starter.support.GuavaCacheSupport;
 import org.slf4j.Logger;
@@ -29,14 +28,11 @@ public class DefaultCacheServiceImpl implements CacheService {
     private final static Logger log = LoggerFactory.getLogger(DefaultCacheServiceImpl.class);
     final
     GuavaCacheSupport guavaCacheSupport;
-    BloomFilterService bloomFilterService;
     AuthProperties authProperties;
 
     public DefaultCacheServiceImpl(GuavaCacheSupport guavaCacheSupport,
-                                   BloomFilterService bloomFilterService,
                                    AuthProperties authProperties) {
         this.guavaCacheSupport = guavaCacheSupport;
-        this.bloomFilterService = bloomFilterService;
         this.authProperties = authProperties;
     }
 
@@ -57,7 +53,6 @@ public class DefaultCacheServiceImpl implements CacheService {
         } else {
             guavaCacheSupport.getCache().put(key, data);
         }
-        bloomFilterService.notContainPut(key);
     }
 
     @Override
@@ -67,18 +62,28 @@ public class DefaultCacheServiceImpl implements CacheService {
 
     @Override
     public String get(String key) {
-        return get(key, authProperties.getEnableExclude());
+        if (authProperties.getEnableExclude()
+                && !this.exclude(key)) {
+            return null;
+        }
+        Object obj = null;
+        if (authProperties.getGuavaCache().getEnableLoadingCache()) {
+            try {
+                obj = guavaCacheSupport.getLoadingCache().get(key);
+            } catch (ExecutionException e) {
+                log.error("LoadingCache error key:{}", key, e);
+            }
+        } else {
+            obj = guavaCacheSupport.getCache().getIfPresent(key);
+        }
+        if (obj == null) return null;
+        return obj.toString();
     }
 
     @Override
     public String get(String key, Callable<Object> loader) throws ExecutionException {
-        return get(key, loader, authProperties.getEnableExclude());
-
-    }
-
-    @Override
-    public String get(String key, Callable<Object> loader, Boolean enableExclude) throws ExecutionException {
-        if (enableExclude && !this.exclude(key)) {
+        if (authProperties.getEnableExclude()
+                && !this.exclude(key)) {
             return null;
         }
         Object obj = null;
@@ -94,11 +99,6 @@ public class DefaultCacheServiceImpl implements CacheService {
             }
         } else {
             if (loader == null) {
-                Boolean bloomRes = bloomFilterService.mightContain(key);
-                if (bloomRes != null && !bloomRes) {
-                    log.warn("BloomFilter 不存在");
-                    return null;
-                }
                 obj = guavaCacheSupport.getCache().getIfPresent(key);
             } else {
                 obj = guavaCacheSupport.getCache().get(key, loader);
@@ -110,38 +110,14 @@ public class DefaultCacheServiceImpl implements CacheService {
     }
 
     @Override
-    public String get(String key, Boolean enableExclude) {
-        if (enableExclude && !this.exclude(key)) {
-            return null;
-        }
-        Object obj = null;
-        if (authProperties.getGuavaCache().getEnableLoadingCache()) {
-            try {
-                obj = guavaCacheSupport.getLoadingCache().get(key);
-            } catch (ExecutionException e) {
-                log.error("LoadingCache error key:{}", key, e);
-            }
-        } else {
-            Boolean bloomRes = bloomFilterService.mightContain(key);
-            if (bloomRes != null && !bloomRes) {
-                log.warn("BloomFilter 不存在");
-                return null;
-            }
-            obj = guavaCacheSupport.getCache().getIfPresent(key);
-        }
-        if (obj == null) return null;
-        return obj.toString();
-    }
-
-    @Override
     public Object excludeGet(String keyExclude) {
-        return get(keyExclude, false);
+        return get(keyExclude);
     }
 
     @Override
     public Object excludeGet(String keyExclude, Callable<Object> loader) {
         try {
-            return get(keyExclude, loader, false);
+            return get(keyExclude, loader);
         } catch (ExecutionException e) {
             log.error("excludeGet [" + keyExclude + "]", e);
         }
@@ -194,14 +170,9 @@ public class DefaultCacheServiceImpl implements CacheService {
             this.put(keyExclude, excludeSerial);
             return true;
         }
-        try {
-            if (Long.parseLong(excludeSerial) >= Long.parseLong(excludeSerialLast)) {
-                this.put(keyExclude, excludeSerial);
-                return true;
-            }
-        } catch (NumberFormatException e) {
-            log.warn("当前系统已强制启用 enableExclude");
-            return false;
+        if (Long.parseLong(excludeSerial) >= Long.parseLong(excludeSerialLast)) {
+            this.put(keyExclude, excludeSerial);
+            return true;
         }
         return false;
     }

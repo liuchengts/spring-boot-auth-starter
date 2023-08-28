@@ -139,7 +139,6 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
                     getHeaderValue(request, AuthConstant.HEADER_KEY_VERSION),
                     IPUtils.getClientIP(request));
         } catch (Exception e) {
-            log.error("getSession error ", e);
             authService.deleteAuth(response, request);
             return null;
         }

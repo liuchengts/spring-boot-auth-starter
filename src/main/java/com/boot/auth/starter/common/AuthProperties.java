@@ -31,40 +31,6 @@ public class AuthProperties {
      */
     private GuavaCache guavaCache;
 
-    /**
-     * （非必须）启用布隆过滤器
-     */
-    private BloomFilter bloomFilter;
-
-    public static class BloomFilter {
-        /**
-         * （非必须）预期插入数量，默认 1000个
-         */
-        private Long expectedInsertions;
-        /**
-         * （非必须）允许的错误概率，必须大于 0.0 默认值 0.01
-         */
-        private Double fpp;
-
-        public Long getExpectedInsertions() {
-            if (expectedInsertions == null || expectedInsertions <= 0) expectedInsertions = 1000L;
-            return expectedInsertions;
-        }
-
-        public void setExpectedInsertions(Long expectedInsertions) {
-            this.expectedInsertions = expectedInsertions;
-        }
-
-        public Double getFpp() {
-            if (fpp == null || fpp - 0 <= 0) fpp = 0.01;
-            return fpp;
-        }
-
-        public void setFpp(Double fpp) {
-            this.fpp = fpp;
-        }
-    }
-
     public static class GuavaCache {
         /**
          * （非必须）设置缓存容器的初始容量
@@ -163,13 +129,5 @@ public class AuthProperties {
 
     public void setGuavaCache(GuavaCache guavaCache) {
         this.guavaCache = guavaCache;
-    }
-
-    public BloomFilter getBloomFilter() {
-        return bloomFilter;
-    }
-
-    public void setBloomFilter(BloomFilter bloomFilter) {
-        this.bloomFilter = bloomFilter;
     }
 }

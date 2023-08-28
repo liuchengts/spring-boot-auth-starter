@@ -57,25 +57,6 @@ public interface CacheService {
     String get(String key, Callable<Object> loader) throws ExecutionException;
 
     /**
-     * 获取
-     *
-     * @param key           要获取的key
-     * @param loader        加载方法
-     * @param enableExclude 是否启用排除验证
-     * @return 获取内容
-     */
-    String get(String key, Callable<Object> loader, Boolean enableExclude) throws ExecutionException;
-
-    /**
-     * 获取
-     *
-     * @param key           要获取的key
-     * @param enableExclude 是否启用排除验证
-     * @return 获取内容
-     */
-    String get(String key, Boolean enableExclude);
-
-    /**
      * 排他性 get方法
      *
      * @param keyExclude 要获取的key
