@@ -62,7 +62,8 @@ public final class AESUtil {
             //执行加密
             byte[] encryptResult = cipher.doFinal(byteContent);
             //用16进制加密
-            return Base64.getEncoder().encodeToString(encryptResult);
+            return bytesToHex(encryptResult);
+//            return Base64.getUrlEncoder().encodeToString(encryptResult);
         } catch (Exception e) {
             log.error("AES加密数据异常:", e);
         }
@@ -83,7 +84,8 @@ public final class AESUtil {
                 return null;
             }
             //先将16进制字符串转为byte数组
-            byte[] contentByte = Base64.getDecoder().decode(content);
+//            byte[] contentByte = Base64.getUrlDecoder().decode(content);
+            byte[] contentByte = hexToByteArray(content);
             // 创建密码器
             Cipher cipher = Cipher.getInstance(ALGORITHM, PROVIDER);
             // 初始化
@@ -118,12 +120,56 @@ public final class AESUtil {
         return null;
     }
 
+    /**
+     * 字节数组转16进制
+     *
+     * @param bytes 需要转换的byte数组
+     * @return 转换后的Hex字符串
+     */
+    private static String bytesToHex(byte[] bytes) {
+        StringBuffer sb = new StringBuffer();
+        for (byte aByte : bytes) {
+            String hex = Integer.toHexString(aByte & 0xFF);
+            if (hex.length() < 2) {
+                sb.append(0);
+            }
+            sb.append(hex);
+        }
+        return sb.toString();
+    }
+
+    /**
+     * hex字符串转byte数组
+     *
+     * @param inHex 待转换的Hex字符串
+     * @return 转换后的byte数组结果
+     */
+    public static byte[] hexToByteArray(String inHex) {
+        int hexlen = inHex.length();
+        byte[] result;
+        if (hexlen % 2 == 1) {
+            //奇数
+            hexlen++;
+            result = new byte[(hexlen / 2)];
+            inHex = "0" + inHex;
+        } else {
+            //偶数
+            result = new byte[(hexlen / 2)];
+        }
+        int j = 0;
+        for (int i = 0; i < hexlen; i += 2) {
+            result[j] = (byte) Integer.parseInt(inHex.substring(i, i + 2), 16);
+            j++;
+        }
+        return result;
+    }
+
 //    public static void main(String[] args) {
-////        https://blog.csdn.net/lijun169/article/details/82736103
-//        String key = "5136796459362114404125733499221448628095239751552846523902990090962942534711629841712950696905779806829274259986483908672792734832841063147657867601278627311474100165615103855530193273455059262869349253056194325470283668038035277913173792476812675321979645750336495052247466307863580839005507172381362475843403948840409679155632872355458180714760020125993942474575408148517376426288596699726831507775676374708476380063728284050626413901646030365565589724221161815007619898031669458614807443014766631288867994994547897784619661872271984961847442186766561593096259846120275460470262031071412870342688967302960753339314966637943486897434364961489077348586221110507726548995076867946594695808694672363807347965465494783266151580001876070825158315745198480509464248829588389087409325279003056394502659181281479882347988178006424504905184752639743092152080732317799173228609517606936237362620305908057124236035672015215954249915929";
-//        String a = encrypt("你好", key);
-//        System.out.println(a); // 64gNOrLP/cLvVj+fnncRiw==
-//        String b = decrypt(a, key);
+//        String key = "11111";
+//        String str = "111";
+//        String estr = encrypt(str, key);
+//        System.out.println(estr);
+//        String b = decrypt(estr, key);
 //        System.out.println(b);
 //    }
 }
