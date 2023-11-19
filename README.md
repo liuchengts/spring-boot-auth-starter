@@ -16,7 +16,7 @@
 <dependency>
     <groupId>com.github.liuchengts</groupId>
     <artifactId>spring-boot-auth-starter</artifactId>
-    <version>1.0.7.2</version>
+    <version>1.0.7.4</version>
 </dependency>
 ```
 
@@ -467,3 +467,4 @@ constructor(
 * 1.0.7.1 去掉敏感日志
 * 1.0.7.2 增强自定义缓存存储方案的接口扩展
 * 1.0.7.3 增强使用数据库作为原始缓存数据方案的支持
+* 1.0.7.4 更改base64位16进制原串
